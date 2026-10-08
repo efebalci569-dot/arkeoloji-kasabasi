@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arkeoloji Kasabası</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="ui">
+  <div id="hud" class="hidden">
+    <div id="quest-tracker" class="px-panel small"></div>
+    <div id="loc-name"></div>
+    <div id="clockbox" class="px-panel">
+      <div id="h-date"></div>
+      <div class="h-row"><img id="h-wicon" alt=""><span id="h-wname"></span><span id="h-time"></span></div>
+      <div class="h-row money"><img id="h-coin" alt=""><span id="h-money"></span></div>
+      <div class="h-row sus hidden" id="h-sus"><img id="h-susicon" alt=""><span id="h-suslabel"></span><div class="meter" style="flex:1"><div id="h-susbar"></div></div></div>
+    </div>
+    <div id="energy"><div id="energy-fill"></div><div id="energy-label">E</div></div>
+    <div id="toolname"></div>
+    <div id="hotbar"></div>
+    <div id="hud-buttons">
+      <button class="px-btn small" data-act="inventory" title="Envanter (I)">Çanta</button>
+      <button class="px-btn small" data-act="journal" title="Görevler (J)">Görevler</button>
+      <button class="px-btn small" data-act="collection" title="Koleksiyon (K)">Koleksiyon</button>
+      <button class="px-btn small" data-act="menu" title="Menü (Esc)">Menü</button>
+    </div>
+  </div>
+  <div id="prompt" class="hidden"></div>
+  <div id="toasts"></div>
+  <div id="banner" class="hidden"></div>
+  <div id="dialog" class="px-panel hidden">
+    <div class="dlg-portrait"><canvas width="16" height="16"></canvas><div class="dlg-name"></div></div>
+    <div class="dlg-body"><div class="dlg-text"></div><div class="dlg-choices"></div><div class="dlg-next">▼</div></div>
+  </div>
+  <div id="panel-root"></div>
+  <div id="tooltip" class="hidden"></div>
+  <div id="fade"></div>
+  <div id="title-screen" class="hidden"></div>
+</div>
+
+<!-- core -->
+<script src="js/core/utils.js"></script>
+<script src="js/core/input.js"></script>
+<!-- grafik (tüm sprite'lar kodla üretilir) -->
+<script src="js/gfx/pixel.js"></script>
+<script src="js/gfx/tiles.js"></script>
+<script src="js/gfx/sprites.js"></script>
+<script src="js/gfx/props.js"></script>
+<script src="js/gfx/buildings.js"></script>
+<script src="js/gfx/characters.js"></script>
+<script src="js/gfx/icons.js"></script>
+<!-- veri -->
+<script src="js/artifacts/artifacts.js"></script>
+<script src="js/items/items.js"></script>
+<script src="js/inventory/inventory.js"></script>
+<script src="js/seasons/time.js"></script>
+<script src="js/weather/weather.js"></script>
+<script src="js/audio/audio.js"></script>
+<!-- dünya -->
+<script src="js/world/world.js"></script>
+<script src="js/world/town.js"></script>
+<script src="js/world/interiors.js"></script>
+<script src="js/excavation/loot.js"></script>
+<script src="js/excavation/digsites.js"></script>
+<script src="js/excavation/excavation.js"></script>
+<script src="js/excavation/cleaning.js"></script>
+<!-- varlıklar & sistemler -->
+<script src="js/player/player.js"></script>
+<script src="js/npcs/npcs.js"></script>
+<script src="js/dialogue/dialogue.js"></script>
+<script src="js/dialogue/lines.js"></script>
+<script src="js/quests/quests.js"></script>
+<script src="js/shop/shop.js"></script>
+<script src="js/shop/customers.js"></script>
+<script src="js/shop/law.js"></script>
+<script src="js/museum/museum.js"></script>
+<script src="js/world/progress.js"></script>
+<script src="js/save/save.js"></script>
+<!-- arayüz -->
+<script src="js/ui/skin.js"></script>
+<script src="js/ui/ui.js"></script>
+<script src="js/ui/menus.js"></script>
+<script src="js/ui/services.js"></script>
+<script src="js/ui/title.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
