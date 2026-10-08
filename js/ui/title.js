@@ -16,7 +16,7 @@
       const sv = has ? AK.Save.peek() : null;
       el.innerHTML = `<div class="logo"><div class="l1">ARKEOLOJİ KASABASI</div><div class="l2">Kaz · Keşfet · Temizle · Sergile · Kasabanı Büyüt</div></div>
         <div class="title-menu px-panel"></div>
-        <div class="title-foot">Sürüm 1.0 · Tüm grafikler, müzik ve sesler kodla üretilmiştir</div>`;
+        <div class="title-foot">Sürüm 1.1 · Tüm grafikler, müzik ve sesler kodla üretilmiştir</div>`;
       const menu = el.querySelector('.title-menu');
       if (has && sv) {
         const b = AK.UI.btn(`Devam Et <span style="font-size:.8rem;opacity:.85">(${U.esc(sv.player.name)} · ${AK.Time.SEASONS[sv.time.season]} ${sv.time.day}, Yıl ${sv.time.year})</span>`, () => this.cont());
