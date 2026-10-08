@@ -43,6 +43,8 @@
     },
     forNpc(n) {
       if (n.id === 'nermin' && n.map === 'museum') return { label: 'Eser bağışla', fn: () => AK.Museum.donatePanel() };
+      const work = { kaya: ['smithy', 'Alet geliştir'], lale: ['restaurant', 'Menü'], riza: ['store', 'Alışveriş'], defne: ['library', 'Araştırma'] }[n.id];
+      if (work && n.inside === work[0]) return { label: work[1], fn: () => this.open(work[0]) };
       if (n.id === 'nermin' && AK.Progress.eventToday() === 'festival' && n.map === 'town') return { label: 'Yarışmaya katıl', fn: () => AK.Progress.contest() };
       return null;
     },
@@ -335,8 +337,23 @@
     },
     // ---------------- PANSİYON ----------------
     inn() {
-      if (AK.Progress.rep() >= 3) this.closed('Turist Pansiyonu', 'Turistlerin kaldığı şirin bir pansiyon. Kasaba ünlendikçe dolup taşıyor!');
-      else AK.UI.toast('Boş ve harap bir ev. Kapısı tahtalarla çakılmış. Kasaba ünlenirse belki biri burayı açar...', 'lock');
+      const ui = UI();
+      if (AK.Progress.rep() < 3) { ui.toast('Toz ve örümcek ağıyla kaplı terk edilmiş bir pansiyon. Kasaba ünlenirse belki biri burayı yeniden açar...', 'lock'); return; }
+      const body = ui.el('div', 'col');
+      body.innerHTML = '<div class="row"><canvas class="sv-port4" width="16" height="16" style="width:calc(var(--u)*24px);height:calc(var(--u)*24px);image-rendering:pixelated;background:#d9bf8c;border:2px solid #7a4f2a"></canvas><div class="grow"><b>Hancı Mert</b><div class="small-t">"Hoş geldin! Kasabamız turistlerle dolup taşıyor, hepsi senin sayende. Yorgunsan odalarımız tertemiz."</div></div></div>';
+      const done = AK.state.flags.innRest === AK.Time.abs();
+      const b = ui.btn('Odada dinlen (50 altın · +40 enerji · 1 saat)', () => buy(50, () => {
+        const p = AK.state.player;
+        AK.state.flags.innRest = AK.Time.abs();
+        p.energy = Math.min(p.maxEnergy, p.energy + 40);
+        AK.Time.advance(60); AK.Audio.sfx('sleep'); ui.closeTop();
+        ui.toast('Yumuşak bir yatakta biraz kestirdin. (+40 enerji)', 'energy');
+      }));
+      b.disabled = done;
+      body.appendChild(b);
+      if (done) body.appendChild(ui.el('div', 'small-t muted', 'Bugün zaten dinlendin.'));
+      ui.panel({ title: 'Pansiyon', body, width: '28rem', foot: [ui.btn('Kapat', () => ui.closeTop())] });
+      body.querySelectorAll('canvas.sv-port4').forEach(c => { const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(AK.Chars.portrait(AK.BldInt.LOOKS.mert), 0, 0); });
     },
     // ---------------- OTOBÜS ----------------
     bus() {

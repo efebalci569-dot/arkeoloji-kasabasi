@@ -293,7 +293,9 @@
         <div class="sep"></div>
         <div class="row"><img class="ic" src="${ui.icon(tomorrow.icon)}"> <span>Yarın: <b>${tomorrow.name}</b> — <span class="small-t">${tomorrow.tip}</span></span></div>
         <div class="small-t muted">Kasaba: ${AK.Progress.stageName()} · Müze: ${AK.state.museum.length}/${AK.Artifacts.LIST.length}</div>`;
-      ui.panel({ title: `Gün Özeti — ${AK.Time.dateStr()}`, body, width: '30rem', noClose: true, modal: true, foot: [ui.btn('Yeni güne başla', () => { ui.closeTop(); cb(); })] });
+      let done = false;
+      const go = () => { if (done) return; done = true; cb(); };
+      ui.panel({ title: `Gün Özeti — ${AK.Time.dateStr()}`, body, width: '30rem', noClose: true, modal: true, onClose: go, foot: [ui.btn('Yeni güne başla', () => { ui.closeTop(); go(); })] });
     },
     // ---------------- DURAKLAT ----------------
     pause() {

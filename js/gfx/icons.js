@@ -111,11 +111,13 @@
     const id = c.g.getImageData(0, 0, w, h), d = id.data, r = AK.U.rng(seed);
     const blobs = [];
     for (let i = 0; i < 5; i++) blobs.push([2 + r() * 12, 2 + r() * 12, 2 + r() * 3.5]);
-    const [or, og, ob] = G.rgb(G.OUT);
+    const op = (x, y) => x >= 0 && y >= 0 && x < w && y < h && d[(y * w + x) * 4 + 3] >= 40;
+    const edge = new Uint8Array(w * h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (op(x, y) && (!op(x - 1, y) || !op(x + 1, y) || !op(x, y - 1) || !op(x, y + 1))) edge[y * w + x] = 1;
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
       const i = (y * w + x) * 4;
       if (d[i + 3] < 40) continue;
-      if (d[i] === or && d[i + 1] === og && d[i + 2] === ob) continue;
+      if (edge[y * w + x]) { d[i] *= 0.8; d[i + 1] *= 0.75; d[i + 2] *= 0.7; continue; }
       // soluklaştır
       const gray = (d[i] + d[i + 1] + d[i + 2]) / 3;
       d[i] = d[i] * 0.45 + gray * 0.3 + 70 * 0.25; d[i + 1] = d[i + 1] * 0.45 + gray * 0.3 + 48 * 0.25; d[i + 2] = d[i + 2] * 0.45 + gray * 0.3 + 30 * 0.25;

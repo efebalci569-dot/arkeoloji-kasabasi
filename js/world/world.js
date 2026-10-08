@@ -318,7 +318,8 @@
       AK.NPCs.collect(m.id, list);
       AK.Customers.collect(m.id, list);
       if (AK.Game.playing) list.push(AK.Player);
-      list.sort((a, b) => a.y - b.y);
+      const sortOf = e => (e.sortY != null ? e.sortY : e.y);
+      list.sort((a, b) => sortOf(a) - sortOf(b));
       for (const e of list) { if (e.render) e.render(ctx, cx, cy); else this.drawObj(e, ctx, cx, cy); }
       // hedef karesi
       if (showTarget) {

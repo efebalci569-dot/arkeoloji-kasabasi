@@ -15,7 +15,7 @@
 | Tuş | İşlev |
 |---|---|
 | WASD / Ok tuşları | Yürü (Shift: koş) |
-| E / F / sağ tık | Konuş, etkileşime geç, kapıdan gir |
+| E / F / sağ tık | Konuş, etkileşime geç, otur / kalk |
 | Boşluk / C / sol tık | Seçili aleti kullan, yemek ye |
 | 1–0 / fare tekerleği | Hızlı erişim çubuğundan seç |
 | I / Tab | Çanta |
@@ -35,6 +35,8 @@
 - **Eser temizleme mini oyunu:** fırça + keski, kırılgan çatlaklar, 4 kalite seviyesi.
 - **Dükkân:** 4 seviye, fiyat etiketleri, 5 müşteri tipi (Turist, Koleksiyoncu, Akademisyen, Zengin Koleksiyoncu, Gizemli Müşteri), sadık müşteriler ve sipariş panosu.
 - **Müze:** bağışlanan her eser kendi vitrininde fiziksel olarak sergilenir; 10 ve 20 bağışta yeni salonlar açılır.
+- **Her binanın içi var:** Kütüphane, demirhane, mağaza, restoran, belediye, postane, liman deposu, pansiyon ve evler (Nermin, Defne, Hatice Teyze) — her biri kendi açılış saatlerinde girilebilir. NPC'ler tezgâh arkasında çalışır, akşamları restoranda oturup yemek yer, gece evlerine döner.
+- **Oturma:** Sandalye, bank, koltuk ve kanepelere oturup kalkabilirsin (E). Oturmak seni yavaşça dinlendirir.
 - **Yasal & yasa dışı satış:** Belediye'deki *Kültür Varlıkları Ofisi* eserleri belgeli ve sabit fiyatla alır (dürüstlük puanı, güvenilir kâşif bonusu). Geceleri liman deposunda bekleyen karaborsacı *Gölge* çok daha fazla öder — ama her satış **şüphe** biriktirir: jandarma devriyesine yakalanabilir ya da sabah *Müfettiş Kemal*'in baskınıyla para cezası yiyip eserlerine el konulabilir.
 - **Kasaba gelişimi:** Unutulmuş Kasaba → Ünlü Arkeoloji Merkezi (çeşme, bayraklar, turistler, pansiyon, hediyelik eşya standı, heykel).
 - **5 NPC:** Nermin (küratör), Kaya (demirci), Lale (restoran), Rıza Usta (genel mağaza), Defne (kütüphaneci) — günlük programlar, arkadaşlık kalpleri, hediye tercihleri, kalp olayları ve yan görevler.

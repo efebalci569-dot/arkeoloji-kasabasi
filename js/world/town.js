@@ -126,15 +126,8 @@
     const knock = (who) => () => AK.UI.toast(AK.NPCs.knock(who), 'mail');
     m.warps.push(
       { x: 6, y: 34, to: 'house', tx: 6, ty: 8, dir: 'up' },
-      { x: 16, y: 20, to: 'museum', tx: 14, ty: 17, dir: 'up' },
+      { x: 16, y: 20, to: 'museum', tx: 14, ty: 17, dir: 'up', need: () => AK.BldInt.closedMsg('museum') },
       { x: 42, y: 20, to: 'shop', tx: 7, ty: 10, dir: 'up' },
-      { x: 6, y: 20, fn: svc('library') }, { x: 52, y: 20, fn: svc('smithy') },
-      { x: 45, y: 11, fn: svc('store') }, { x: 29, y: 13, fn: svc('restaurant') },
-      { x: 15, y: 10, fn: svc('townhall') }, { x: 69, y: 20, fn: svc('warehouse') },
-      { x: 35, y: 34, fn: svc('postane') },
-      { x: 22, y: 34, fn: () => AK.UI.toast(U.pick(['Kapıyı kimse açmıyor. İçeriden radyo sesi geliyor.', 'Komşu teyze pencereden el sallıyor: "Bugün çok yoruldum yavrum, sonra gel!"', 'Kapıda bir not: "Pazara gittim."']), 'mail') },
-      { x: 14, y: 34, fn: knock('nermin') }, { x: 43, y: 34, fn: knock('defne') },
-      { x: 51, y: 34, fn: () => AK.Services.open('inn') },
       {
         x: 55, y: 0, w: 2, h: 1, to: 'forest', tx: 22, ty: 33, dir: 'up', back: [0, 14],
         need: () => !AK.state.flags.kaziIzni ? 'Kazı alanına girmek için önce müzede Nermin Hanım ile konuşmalısın.' :
@@ -165,7 +158,9 @@
       },
       int: () => AK.UI.toast(`Saat kulesi: ${AK.Time.clock()}. Kasaba ${AK.Progress.stageName()}.`, 'clock'), prompt: 'Saat Kulesi',
     });
-    for (const [x, y] of [[23, 26], [35, 26]]) prop(m, { kind: 'bench', x: (x + 1) * 16, y: (y + 1) * 16, solid: [x, y, 2, 1], shadow: [30, 6, 3], spr: S.bench() });
+    m.benchSeats = {};
+    const bench = (x, y, name) => { const o = prop(m, { kind: 'seat', seatKind: 'bench', x: (x + 1) * 16, y: (y + 1) * 16, solid: [x, y, 2, 1], shadow: [30, 6, 3], spr: S.bench(), prompt: 'Otur', int: ob => AK.Player.sitOn(ob) }); o.seats = AK.BldInt.seatDefs('bench', o); if (name) m.benchSeats[name] = { approach: [x + 1, y + 1], seat: o.seats[1], dir: 'down' }; return o; };
+    bench(23, 26, 'bench_w'); bench(35, 26, 'bench_e');
     for (const [x, y] of [[23, 16], [23, 27], [36, 27], [33, 16], [8, 24], [50, 24], [20, 37], [40, 37], [55, 14], [65, 21], [58, 21], [12, 12], [20, 12], [72, 24]]) {
       prop(m, { kind: 'lamp', x: x * 16 + 8, y: (y + 1) * 16, solid: [x, y, 1, 1], shadow: [10, 4, 3], spr: () => S.lamp(AK.Time.isDark() ? 1 : 0), light: { dy: -30, r: 46, c: '#ffd890', a: 0.95, fl: true }, emit: [[5, 4, 6, 5]] });
     }
@@ -201,15 +196,6 @@
     for (const x of [60, 61, 62]) { prop(m, { kind: 'rail', x: x * 16 + 8, y: 22 * 16 - 1, spr: S.bridgeRail(), oy: 0 }); prop(m, { kind: 'rail', x: x * 16 + 8, y: 25 * 16 - 2, spr: S.bridgeRail() }); }
     prop(m, { kind: 'signpost', x: 58 * 16 + 8, y: 25 * 16, solid: [58, 24, 1, 1], spr: S.signpost('LİMAN', 'MEYDAN') });
     prop(m, { kind: 'signpost', x: 21 * 16 + 8, y: 25 * 16, solid: [21, 24, 1, 1], spr: S.signpost('MEYDAN', 'OTOBÜS') });
-    // karaborsacı Gölge (gece)
-    const smug = W.add(m, {
-      kind: 'smuggler', x: 71 * 16 + 8, y: 24 * 16 + 12, irect: [70 * 16, 23 * 16, 40, 40], prio: true, shadow: [12, 4, 0],
-      spr: () => AK.Chars.get(AK.Law.SMUGGLER, 'left', 'idle', 0),
-      light: { dx: -10, dy: -10, r: 26, c: '#ffb060', a: 0.9, fl: true },
-      draw(o, ctx, cx, cy) { ctx.fillStyle = '#3b3540'; ctx.fillRect(Math.round(o.x - 12 - cx), Math.round(o.y - 14 - cy), 3, 5); ctx.fillStyle = '#ffd27a'; ctx.fillRect(Math.round(o.x - 11 - cx), Math.round(o.y - 13 - cy), 1, 3); },
-      int: () => AK.Services.open('blackmarket'), prompt: 'Gölge',
-    });
-    m.smuggler = smug;
     // otobüs durağı & tabelalar
     prop(m, { kind: 'bus', x: 3 * 16 + 8, y: 25 * 16, solid: [2, 24, 3, 1], shadow: [46, 8, 4], spr: S.busstop(), int: () => AK.Services.open('bus'), prompt: 'Otobüs Durağı' });
     prop(m, { kind: 'sign', x: 2 * 16 + 8, y: 22 * 16, solid: [2, 21, 1, 1], spr: S.sign(), int: () => AK.UI.toast('Şehre giden yol. Uzak bölgelere gitmek için otobüs durağını kullan.', 'bus'), prompt: 'Tabela' });
@@ -230,7 +216,7 @@
     for (let y = 40; y <= 42; y++) for (let x = 5; x <= 10; x++) if (x !== 7 && x !== 8 || y !== 40) prop(m, { kind: 'crop', flat: true, x: x * 16 + 8, y: (y + 1) * 16, spr: () => S.crops(AK.Time.season(), x + y) });
     prop(m, { kind: 'scarecrow', x: 10 * 16 + 8, y: 40 * 16 + 4, solid: [10, 39, 1, 1], spr: S.scarecrow(), int: () => AK.UI.toast('Amcanın bahçesi. Korkuluk bile onun eski kâşif şapkasını takıyor!', 'star'), prompt: 'Bahçe' });
     // park
-    for (const [x, y] of [[21, 38], [37, 38]]) prop(m, { kind: 'bench', x: (x + 1) * 16, y: (y + 1) * 16, solid: [x, y, 2, 1], shadow: [30, 6, 3], spr: S.bench() });
+    bench(21, 38, 'park_w'); bench(37, 38, 'park_e');
     prop(m, { kind: 'picnic', x: 42 * 16, y: 41 * 16, solid: [41, 40, 2, 1], shadow: [34, 7, 4], spr: S.picnic() });
     prop(m, { kind: 'boat', x: 32 * 16, y: 41 * 16 + 6, spr: S.rowboat(), update: o => { o.oy = Math.round(Math.sin(W.t * 1.3 + 1) * 1); } });
     for (const [x, y] of [[23, 42], [36, 40], [26, 44], [34, 44]]) prop(m, { kind: 'reeds', x: x * 16 + 8, y: (y + 1) * 16, spr: () => S.reeds(AK.Time.season()) });
@@ -284,7 +270,6 @@
 
     m.refresh = refresh;
     m.daily = daily;
-    m.update = mm => { mm.smuggler.hidden = !(AK.Law && AK.Law.smugglerHere()); };
     m.lights = () => [];
     return m;
   }
@@ -292,7 +277,6 @@
   function refresh(m) {
     const rp = rep(), fest = AK.Progress && AK.Progress.eventToday() === 'festival';
     for (const o of m.devDeco) o.hidden = o.fest ? !fest : rp < o.need;
-    if (m.smuggler) m.smuggler.hidden = !(AK.Law && AK.Law.smugglerHere());
   }
 
   // hazine avı günü X işaretleri
@@ -320,5 +304,14 @@
     }
   }
 
-  AK.Town = { DOORS, SPOTS, build, SPEC };
+  // tüm binaların kapılarını iç mekânlara bağla (iç mekânlar kurulduktan sonra çağrılır)
+  function linkDoors() {
+    const m = W.get('town'), REG = AK.BldInt.REG;
+    for (const b of ['library', 'smithy', 'store', 'restaurant', 'belediye', 'postane', 'warehouse', 'inn', 'house_nermin', 'house_defne', 'komsu']) {
+      const [x, y] = DOORS[b], R = REG[b];
+      m.warps.push({ x, y, to: R.map, tx: R.entry[0], ty: R.entry[1], dir: 'up', need: () => AK.BldInt.closedMsg(b) });
+    }
+  }
+
+  AK.Town = { DOORS, SPOTS, build, SPEC, linkDoors };
 })();

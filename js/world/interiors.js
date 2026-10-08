@@ -53,8 +53,8 @@
     W.add(m, Object.assign(at(10, 5), { kind: 'stove', solid: [10, 5, 1, 1], spr: S.stove(), int: () => AK.UI.toast('Amcanın eski ocağı. Çaydanlık hâlâ sıcak.', 'museum'), prompt: 'Ocak' }));
     W.add(m, Object.assign(at(10, 6), { kind: 'kitchen', solid: [10, 6, 1, 1], spr: S.kitchen() }));
     W.add(m, Object.assign(at(2, 5, 2), { kind: 'table', solid: [2, 5, 2, 1], spr: S.table(), light: () => AK.Time.min() >= 1080 ? { dy: -18, r: 44, c: '#ffcf80', a: 0.9, fl: true } : null }));
-    W.add(m, Object.assign(at(1, 5), { kind: 'chair', solid: [1, 5, 1, 1], spr: S.chair() }));
-    W.add(m, Object.assign(at(4, 5), { kind: 'chair', solid: [4, 5, 1, 1], spr: S.chair() }));
+    AK.BldInt.seat(m, 'chairR', 1, 5, S.chairSide('#a8743f', 0));
+    AK.BldInt.seat(m, 'chairL', 4, 5, S.chairSide('#a8743f', 1));
     W.add(m, Object.assign(at(5, 8), { kind: 'pot', solid: [5, 8, 1, 1], spr: () => S.flowerpot(2, 0) }));
     const furn = [];
     const vit = (key, tx, ty, base) => furn.push(W.add(m, Object.assign(at(tx, ty, 2), {
@@ -174,7 +174,7 @@
     W.add(m, Object.assign(at(14, 18), { kind: 'mat', flat: true, spr: S.doormat(), oy: -3 }));
     W.add(m, Object.assign(at(11, 15, 3), { kind: 'desk', solid: [11, 15, 3, 1], spr: S.desk(), int: () => AK.Museum.deskTalk(), prompt: 'Danışma' }));
     for (const [x, y] of [[1, 16], [17, 16], [1, 2], [28, 9], [28, 17]]) W.add(m, Object.assign(at(x, y), { kind: 'plant', solid: [x, y, 1, 1], spr: S.plant(1) }));
-    W.add(m, Object.assign(at(7, 12, 2), { kind: 'bench', solid: [7, 12, 2, 1], spr: S.bench() }));
+    AK.BldInt.seat(m, 'bench', 7, 12, S.bench(), 2);
     // kaideler
     const peds = [];
     const A = AK.Artifacts;

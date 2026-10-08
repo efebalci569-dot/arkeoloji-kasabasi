@@ -189,6 +189,17 @@
     house: { paper: '#dcc9a0', stripe: '#cfb98c', wain: '#8d5d32', top: '#4a3022' },
     shop: { paper: '#b8cfc0', stripe: '#a5c0b0', wain: '#7a4f2a', top: '#3f2a20' },
     museum: { paper: '#d9d1c1', stripe: '#c8bfab', wain: '#a99f8c', top: '#4a4038' },
+    smithy: { paper: '#9a5a48', stripe: '#8a4a3a', wain: '#4a4a56', top: '#2e2630' },
+    library: { paper: '#3f6a52', stripe: '#355c46', wain: '#6a4428', top: '#2e2420' },
+    store: { paper: '#f0e2b8', stripe: '#e2d0a0', wain: '#7a5a3a', top: '#3f2a20' },
+    restaurant: { paper: '#f2d0b0', stripe: '#e8bc98', wain: '#a8453a', top: '#4a2a22' },
+    office: { paper: '#b8c8d8', stripe: '#a8b8c8', wain: '#5a6a7a', top: '#2e3440' },
+    post: { paper: '#f2e0a0', stripe: '#e8d088', wain: '#3d6aa8', top: '#3f3020' },
+    warehouse: { paper: '#6a5a4a', stripe: '#5a4a3c', wain: '#4a3a2e', top: '#221a16' },
+    inn: { paper: '#d8b0a0', stripe: '#c89a8a', wain: '#7a3a2a', top: '#3a2420' },
+    cottage: { paper: '#d8d0e8', stripe: '#c8bedc', wain: '#6a5a8a', top: '#3a3048' },
+    study: { paper: '#c8d8d0', stripe: '#b8ccc2', wain: '#3f5a52', top: '#2a3430' },
+    ruin: { paper: '#a89880', stripe: '#988870', wain: '#5a4a3a', top: '#2a221c' },
   };
   function wallTile(style, part, v) {
     const c = G.canvas(16, 16), g = c.g, W = WALLS[style] || WALLS.house, r = G.rnd('wl', style, part, v);

@@ -33,6 +33,8 @@
       AK.World.maps = {};
       AK.Town.build();
       AK.Interiors.build();
+      AK.BldInt.build();
+      AK.Town.linkDoors();
       AK.DigSites.build();
     },
     resize() {
@@ -121,8 +123,9 @@
       AK.World.draw(this.ctx, showTarget);
     },
     updatePrompt() {
-      const f = AK.Player.findInteract(false);
       const s = this.scale, cam = AK.World.cam;
+      if (AK.Player.seated) { AK.UI.prompt('<b>E</b> Kalk', (AK.Player.x - cam.x) * s, (AK.Player.y - 30 - cam.y) * s); return; }
+      const f = AK.Player.findInteract(false);
       if (!f) { AK.UI.prompt(null); return; }
       let x, y, text;
       if (f.npc) { x = f.npc.x; y = f.npc.y - 30; text = `<b>E</b> Konuş${f.npc.def ? ' · ' + U.esc(f.npc.def.name) : f.npc.name ? ' · ' + U.esc(f.npc.name) : ''}`; }
@@ -155,6 +158,11 @@
     tick10(m) {
       AK.Shop.offsiteTick();
       AK.World.updateMusic();
+      // oturan oyuncu yavaşça dinlenir
+      if (AK.Player.seated) {
+        const p = AK.state.player;
+        if (p.energy < p.maxEnergy) { p.energy = Math.min(p.maxEnergy, p.energy + 2); AK.World.float(AK.Player.x, AK.Player.y - 30, '+2 enerji', '#7cf06a'); }
+      }
       if (m === 1200 && AK.World.cur && AK.World.cur.id !== 'house' && AK.World.cur.outdoor) AK.UI.toast('Hava karardı. Gece ormanda ve mağarada fenerinin ışığı yanına kalır.', 'clock');
     },
     ambience() {

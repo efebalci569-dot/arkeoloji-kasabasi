@@ -63,21 +63,28 @@
     }
   };
   // 1px kontur ekler (şeffaf komşu piksellere)
+  // Stardew tarzı "renkli kontur": kontur pikseli, komşu pikselin koyulaştırılmış rengidir.
+  // col verilirse tek renk kontur kullanılır.
   G.outline = function (src, col) {
-    col = col || G.OUT;
     const w = src.width, h = src.height;
     const sd = (src.g || src.getContext('2d')).getImageData(0, 0, w, h);
     const d = sd.data;
     const o = new Uint8ClampedArray(d);
-    const [r, g, b] = G.rgb(col);
+    const fixed = col ? G.rgb(col) : null;
+    const dr = 26, dg = 14, db = 30, k = 0.62;
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         const i = (y * w + x) * 4;
         if (d[i + 3] > 40) continue;
-        if ((x > 0 && d[i - 4 + 3] > 40) || (x < w - 1 && d[i + 4 + 3] > 40) ||
-            (y > 0 && d[i - w * 4 + 3] > 40) || (y < h - 1 && d[i + w * 4 + 3] > 40)) {
-          o[i] = r; o[i + 1] = g; o[i + 2] = b; o[i + 3] = 255;
-        }
+        let n = -1;
+        if (y < h - 1 && d[i + w * 4 + 3] > 40) n = i + w * 4;
+        else if (y > 0 && d[i - w * 4 + 3] > 40) n = i - w * 4;
+        else if (x > 0 && d[i - 4 + 3] > 40) n = i - 4;
+        else if (x < w - 1 && d[i + 4 + 3] > 40) n = i + 4;
+        if (n < 0) continue;
+        if (fixed) { o[i] = fixed[0]; o[i + 1] = fixed[1]; o[i + 2] = fixed[2]; }
+        else { o[i] = d[n] * (1 - k) + dr * k; o[i + 1] = d[n + 1] * (1 - k) + dg * k; o[i + 2] = d[n + 2] * (1 - k) + db * k; }
+        o[i + 3] = 255;
       }
     }
     const c = G.canvas(w, h);

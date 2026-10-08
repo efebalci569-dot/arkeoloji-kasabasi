@@ -211,11 +211,11 @@
       const x = Math.round(c.x - cx), y = Math.round(c.y - cy);
       ctx.fillStyle = 'rgba(40,24,48,0.28)'; ctx.fillRect(x - 5, y - 2, 10, 3);
       const walking = c.path.length > 0;
-      ctx.drawImage(AK.Chars.get(c.look, c.dir, walking ? 'walk' : 'idle', walking ? Math.floor(c.anim) % 4 : 0), x - 8, y - 26);
+      ctx.drawImage(AK.Chars.get(c.look, c.dir, walking ? 'walk' : 'idle', walking ? Math.floor(c.anim) % 4 : 0), x - 8, y - 27);
       if (c.bubble && c.bubbleT > 0) {
         const b = c.state === 'counter' ? Math.round(Math.sin(W.t * 4) * 1.5) : 0;
-        ctx.fillStyle = '#fff6e0'; ctx.fillRect(x - 7, y - 44 + b, 14, 13); ctx.fillStyle = '#2a1a24'; ctx.fillRect(x - 1, y - 31 + b, 2, 2);
-        ctx.drawImage(AK.Icons.ui(c.bubble), x - 6, y - 43 + b, 12, 12);
+        ctx.fillStyle = '#fff6e0'; ctx.fillRect(x - 7, y - 46 + b, 14, 13); ctx.fillStyle = '#2a1a24'; ctx.fillRect(x - 1, y - 33 + b, 2, 2);
+        ctx.drawImage(AK.Icons.ui(c.bubble), x - 6, y - 45 + b, 12, 12);
       }
     },
   };

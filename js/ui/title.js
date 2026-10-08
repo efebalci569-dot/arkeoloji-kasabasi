@@ -16,7 +16,7 @@
       const sv = has ? AK.Save.peek() : null;
       el.innerHTML = `<div class="logo"><div class="l1">ARKEOLOJİ KASABASI</div><div class="l2">Kaz · Keşfet · Temizle · Sergile · Kasabanı Büyüt</div></div>
         <div class="title-menu px-panel"></div>
-        <div class="title-foot">Sürüm 1.1 · Tüm grafikler, müzik ve sesler kodla üretilmiştir</div>`;
+        <div class="title-foot">Sürüm 1.2 · Tüm grafikler, müzik ve sesler kodla üretilmiştir</div>`;
       const menu = el.querySelector('.title-menu');
       if (has && sv) {
         const b = AK.UI.btn(`Devam Et <span style="font-size:.8rem;opacity:.85">(${U.esc(sv.player.name)} · ${AK.Time.SEASONS[sv.time.season]} ${sv.time.day}, Yıl ${sv.time.year})</span>`, () => this.cont());
@@ -78,9 +78,9 @@
         look._k = null;
         const g = prev.getContext('2d'); g.imageSmoothingEnabled = false;
         g.clearRect(0, 0, 48, 30);
-        g.drawImage(AK.Chars.get(look, 'down', 'idle', 0), 2, 2);
-        g.drawImage(AK.Chars.get(look, 'right', 'walk', Math.floor(t) % 4), 16, 2);
-        g.drawImage(AK.Chars.get(look, 'up', 'idle', 0), 30, 2);
+        g.drawImage(AK.Chars.get(look, 'down', 'idle', 0), 2, 1);
+        g.drawImage(AK.Chars.get(look, 'right', 'walk', Math.floor(t) % 4), 16, 1);
+        g.drawImage(AK.Chars.get(look, 'up', 'idle', 0), 30, 1);
       };
       const iv = setInterval(() => { t += 1; draw(); }, 160);
       draw();

@@ -7,7 +7,30 @@
     x: 0, y: 0, dir: 'down', moving: false, animT: 0, step: 0, stepSnd: 0,
     act: null, hold: null, holdT: 0, target: null, isEnt: true, signal: 0, beepT: 0,
     get look() { return AK.state.player.look; },
-    stop() { this.moving = false; this.act = null; this.step = 0; },
+    stop() { this.moving = false; this.act = null; this.step = 0; if (this.seated) { this.seated = null; this.sortY = null; } },
+    // ---------------- oturma ----------------
+    sitOn(o) {
+      if (this.seated) { this.standUp(); return; }
+      const seats = o.seats || [];
+      if (!seats.length) return;
+      const m = AK.World.cur;
+      const taken = s => AK.NPCs.list.concat(AK.NPCs.tourists).some(n => n.map === m.id && n.sitting && Math.abs(n.x - s.x) < 3 && Math.abs(n.y - s.y) < 3) ||
+        m.objects.some(e => (e.kind === 'mnpc' || e.kind === 'patron') && !e.hidden && Math.abs(e.x - s.x) < 3 && Math.abs(e.y - s.y) < 3);
+      const free = seats.filter(s => !taken(s)).sort((a, b) => Math.hypot(a.x - this.x, a.y - this.y) - Math.hypot(b.x - this.x, b.y - this.y));
+      if (!free.length) { AK.UI.toast('Burası dolu.', 'lock'); return; }
+      const st = free[0];
+      this.seated = { o, st, px: this.x, py: this.y, t: 0, rest: 0 };
+      this.x = st.x; this.y = st.y; this.dir = st.dir; this.sortY = st.sort; this.moving = false; this.act = null;
+      AK.Audio.sfx('step');
+      if (!AK.state.flags.tipSit) { AK.state.flags.tipSit = true; AK.UI.toast('Oturdun. Kalkmak için yürü ya da E\'ye bas. Oturmak seni yavaşça dinlendirir.', 'heart'); }
+    },
+    standUp() {
+      const s = this.seated;
+      if (!s) return;
+      this.seated = null; this.sortY = null;
+      this.x = s.px; this.y = s.py;
+      AK.Audio.sfx('step');
+    },
     // ---------------- çarpışma ----------------
     free(nx, ny) {
       const m = AK.World.cur;
@@ -29,6 +52,13 @@
     },
     // ---------------- güncelleme ----------------
     update(dt) {
+      if (this.seated) {
+        this.seated.t += dt;
+        this.moving = false; this.target = null; this.signal = 0;
+        const moveKey = In.down('up') || In.down('down') || In.down('left') || In.down('right');
+        if (this.seated.t > 0.35 && (moveKey || In.hit('interact') || In.hit('use') || In.mouse.clicked[0] || In.mouse.clicked[2])) { this.standUp(); In.eat('interact'); }
+        return;
+      }
       if (this.holdT > 0) { this.holdT -= dt; if (this.holdT <= 0) this.hold = null; this.moving = false; return; }
       if (this.act) {
         const a = this.act;
@@ -170,7 +200,8 @@
       let anim = 'idle', step = 0, dir = this.dir;
       const a = this.act;
       let toolDraw = null;
-      if (this.hold) { anim = 'hold'; dir = 'down'; }
+      if (this.seated) { anim = 'sit'; }
+      else if (this.hold) { anim = 'hold'; dir = 'down'; }
       else if (a) {
         const ph = a.t / a.dur;
         if (a.kind === 'brush') { anim = 'brush'; step = Math.floor(a.t * 12) % 2; }
@@ -178,7 +209,7 @@
         toolDraw = { kind: a.tool, phase: anim };
       } else if (this.moving) { anim = 'walk'; step = this.step; }
       const spr = AK.Chars.get(this.look, dir, anim, step);
-      const sx = x - 8, sy = y - 26;
+      const sx = x - 8, sy = y - 27;
       const lv = toolDraw ? (AK.state.tools[toolDraw.kind] || 1) : 1;
       const drawTool = () => {
         const k = toolDraw.kind, ph = toolDraw.phase;
@@ -197,11 +228,11 @@
       if (toolDraw && !behind) drawTool();
       if (this.hold) {
         const ic = AK.Icons.forStack(this.hold);
-        if (ic) ctx.drawImage(ic, x - 8, y - 44 + Math.round(Math.sin(AK.World.t * 6)));
+        if (ic) ctx.drawImage(ic, x - 8, y - 46 + Math.round(Math.sin(AK.World.t * 6)));
       }
       if (this.signal > 0) {
         const bars = Math.ceil(this.signal * 4);
-        for (let i = 0; i < 4; i++) { ctx.fillStyle = i < bars ? (this.signal > 0.95 ? '#7cf06a' : '#f2c14e') : 'rgba(40,24,48,0.5)'; ctx.fillRect(x - 6 + i * 3, y - 34 - i * 2, 2, 2 + i * 2); }
+        for (let i = 0; i < 4; i++) { ctx.fillStyle = i < bars ? (this.signal > 0.95 ? '#7cf06a' : '#f2c14e') : 'rgba(40,24,48,0.5)'; ctx.fillRect(x - 6 + i * 3, y - 36 - i * 2, 2, 2 + i * 2); }
       }
     },
   };

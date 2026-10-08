@@ -119,18 +119,40 @@
       const T = AK.Town;
       if (key.startsWith('museum_in')) { const sp = MUSEUM_SPOTS[key.split(':')[1]] || MUSEUM_SPOTS.hall; return { door: 'museum', inner: sp }; }
       if (T.DOORS[key]) return { door: key };
-      if (T.SPOTS[key]) return { spot: T.SPOTS[key] };
+      if (T.SPOTS[key]) {
+        const tm = W.get('town'), bs = tm && tm.benchSeats && tm.benchSeats[key];
+        if (bs) return { spot: bs };
+        const sp = T.SPOTS[key];
+        return { spot: { approach: [sp[0], sp[1]], dir: sp[2] } };
+      }
       return { door: 'restaurant' };
     },
+    // bina içinde NPC'nin duracağı / oturacağı yer
+    spotFor(n, b, inner) {
+      const R = AK.BldInt && AK.BldInt.REG[b];
+      if (inner) { const sp = this.innerSpot(n, inner); return { approach: [sp[0], sp[1]], dir: sp[2] }; }
+      if (!R) return null;
+      if (R.spots[n.id]) return R.spots[n.id];
+      if (R.seats.length) return R.seats[DEFS.indexOf(n.def) % R.seats.length];
+      return { approach: R.entry, dir: 'up' };
+    },
+    sitAt(n, spot) {
+      n.dir = spot.dir || 'down';
+      if (spot.seat) { n.sitFrom = [n.x, n.y]; n.x = spot.seat.x; n.y = spot.seat.y; n.sortY = spot.seat.sort; n.dir = spot.seat.dir; n.sitting = true; }
+    },
+    unsit(n) { if (n.sitting) { n.sitting = false; if (n.sitFrom) { n.x = n.sitFrom[0]; n.y = n.sitFrom[1]; } n.sortY = null; } },
     snap(n) {
       const key = this.entryFor(n, AK.Time.min());
       const r = this.resolve(key);
+      this.unsit(n);
       n.key = key; n.legs = []; n.path = [];
-      if (r.inner) {
-        const sp = this.innerSpot(n, r.inner);
-        n.map = 'museum'; n.inside = null; n.x = sp[0] * 16 + 8; n.y = sp[1] * 16 + 12; n.dir = sp[2];
+      const REG = AK.BldInt ? AK.BldInt.REG : {};
+      if (r.door && REG[r.door]) {
+        const sp = this.spotFor(n, r.door, r.inner);
+        n.map = REG[r.door].map; n.inside = r.door; n.x = sp.approach[0] * 16 + 8; n.y = sp.approach[1] * 16 + 12;
+        this.sitAt(n, sp);
       } else if (r.door) { n.map = null; n.inside = r.door; }
-      else { n.map = 'town'; n.inside = null; n.x = r.spot[0] * 16 + 8; n.y = r.spot[1] * 16 + 12; n.dir = r.spot[2]; }
+      else { n.map = 'town'; n.inside = null; n.x = r.spot.approach[0] * 16 + 8; n.y = r.spot.approach[1] * 16 + 12; this.sitAt(n, r.spot); }
     },
     innerSpot(n, sp) {
       // Doğu kanadı kapalıysa ana salonda bekle
@@ -142,22 +164,23 @@
     plan(n, key) {
       n.key = key;
       const r = this.resolve(key);
-      const T = AK.Town;
+      const T = AK.Town, REG = AK.BldInt.REG;
+      this.unsit(n);
       n.legs = [];
-      // içerideyse kapıdan çık
-      if (n.inside) {
-        const d = T.DOORS[n.inside];
+      const tb = r.door && REG[r.door] ? r.door : null;
+      const tspot = tb ? this.spotFor(n, tb, r.inner) : null;
+      const curB = n.inside && REG[n.inside] && n.map === REG[n.inside].map ? n.inside : null;
+      if (curB) {
+        if (curB === tb) { n.legs.push({ map: n.map, to: tspot.approach, then: 'spot', spot: tspot }); this.startLeg(n); return; }
+        n.legs.push({ map: n.map, to: REG[curB].entry, then: 'leave', b: curB });
+      } else if (n.inside || !n.map) {
+        const d = T.DOORS[n.inside] || T.DOORS.restaurant;
         n.inside = null; n.map = 'town'; n.x = d[0] * 16 + 8; n.y = (d[1] + 1) * 16 + 12; n.dir = 'down';
-      } else if (n.map === 'museum' && !(r.inner)) {
-        n.legs.push({ map: 'museum', to: [14, 17], then: 'leaveMuseum' });
-      } else if (n.map === 'museum' && r.inner) {
-        const sp = this.innerSpot(n, r.inner);
-        n.legs.push({ map: 'museum', to: [sp[0], sp[1]], then: 'face', face: sp[2] });
-        this.startLeg(n); return;
       }
-      if (r.door) n.legs.push({ map: 'town', to: T.DOORS[r.door], then: r.inner ? 'enterMuseum' : 'enter', b: r.door, inner: r.inner });
-      else n.legs.push({ map: 'town', to: [r.spot[0], r.spot[1]], then: 'face', face: r.spot[2] });
-      if (r.inner) { const sp = this.innerSpot(n, r.inner); n.legs.push({ map: 'museum', to: [sp[0], sp[1]], then: 'face', face: sp[2] }); }
+      if (tb) {
+        n.legs.push({ map: 'town', to: T.DOORS[tb], then: 'enter', b: tb });
+        n.legs.push({ map: REG[tb].map, to: tspot.approach, then: 'spot', spot: tspot });
+      } else n.legs.push({ map: 'town', to: r.spot.approach, then: 'spot', spot: r.spot });
       this.startLeg(n);
     },
     startLeg(n) {
@@ -165,7 +188,7 @@
       if (!leg) return;
       if (n.map !== leg.map) { n.path = []; return; }
       const m = W.get(leg.map);
-      if (!m.blk) W.rebuild(m);
+      if (!m.blk) { if (m.refresh) m.refresh(m); W.rebuild(m); }
       const p = bfs(m, Math.floor(n.x / 16), Math.floor((n.y - 4) / 16), leg.to[0], leg.to[1]);
       if (!p) { n.x = leg.to[0] * 16 + 8; n.y = leg.to[1] * 16 + 12; n.path = []; }
       else n.path = p;
@@ -173,9 +196,10 @@
     finishLeg(n) {
       const leg = n.legs.shift();
       if (!leg) return;
-      if (leg.then === 'enter') { n.map = null; n.inside = leg.b; }
-      else if (leg.then === 'enterMuseum') { n.map = 'museum'; n.x = 14 * 16 + 8; n.y = 17 * 16 + 12; n.dir = 'up'; }
-      else if (leg.then === 'leaveMuseum') { n.map = 'town'; const d = AK.Town.DOORS.museum; n.x = d[0] * 16 + 8; n.y = (d[1] + 1) * 16 + 12; n.dir = 'down'; }
+      const REG = AK.BldInt.REG;
+      if (leg.then === 'enter') { const R = REG[leg.b]; n.map = R.map; n.inside = leg.b; n.x = R.entry[0] * 16 + 8; n.y = R.entry[1] * 16 + 12; n.dir = 'up'; }
+      else if (leg.then === 'leave') { n.map = 'town'; n.inside = null; const d = AK.Town.DOORS[leg.b]; n.x = d[0] * 16 + 8; n.y = (d[1] + 1) * 16 + 12; n.dir = 'down'; }
+      else if (leg.then === 'spot') this.sitAt(n, leg.spot);
       else if (leg.then === 'face') n.dir = leg.face;
       this.startLeg(n);
     },
@@ -230,17 +254,17 @@
       const walking = n.path && n.path.length > 0;
       let look = n.look;
       if (n.def && AK.Progress && AK.Progress.eventToday() === 'kostum') look = N.costume(n);
-      const spr = AK.Chars.get(look, n.dir, walking ? 'walk' : 'idle', walking ? Math.floor(n.anim) % 4 : 0);
-      ctx.drawImage(spr, x - 8, y - 26);
+      const spr = AK.Chars.get(look, n.dir, n.sitting && !walking ? 'sit' : walking ? 'walk' : 'idle', walking ? Math.floor(n.anim) % 4 : 0);
+      ctx.drawImage(spr, x - 8, y - 27);
       if (n.def) {
         const st = N.st(n.id);
         const q = AK.Quests && AK.Quests.npcHasNews(n.id);
         if (q || !st.met) {
           const b = Math.round(Math.sin(AK.World.t * 4) * 1.5);
-          ctx.drawImage(AK.Icons.ui('quest'), x - 8, y - 44 + b);
+          ctx.drawImage(AK.Icons.ui('quest'), x - 8, y - 46 + b);
         }
       }
-      if (n.bubble && n.bubbleT > 0) ctx.drawImage(AK.Icons.ui(n.bubble), x - 8, y - 44);
+      if (n.bubble && n.bubbleT > 0) ctx.drawImage(AK.Icons.ui(n.bubble), x - 8, y - 46);
     },
     costume(n) {
       n._cos = n._cos || Object.assign({}, n.look, { outfit: 'tunic', outfitCol: '#f2ead8', shirt: '#e8dcc0', hat: 'laurel', _k: null });
