@@ -88,6 +88,35 @@
       show(tab || 'q');
       ui.panel({ title: 'Görev Defteri', body, width: '34rem' });
     },
+    // ---------------- İLİŞKİLER ----------------
+    relations() {
+      const ui = UI(), N = AK.NPCs, R = AK.state.rel || {}, today = AK.Time.abs();
+      const body = ui.el('div', 'col');
+      const heartsHTML = id => { const h = N.hearts(id); let x = ''; for (let i = 0; i < 10; i++) x += `<img src="${ui.icon(i < h ? 'heart' : 'heartE')}">`; return x; };
+      const order = N.DEFS.slice().sort((a, b) => (R.partner === b.id) - (R.partner === a.id) || N.st(b.id).fr - N.st(a.id).fr);
+      const met = order.filter(d => N.st(d.id).met).length;
+      body.appendChild(ui.el('div', 'small-t muted', `Tanıştığın kişiler: ${met}/${N.DEFS.length}. Her gün konuşmak, sevdiği hediyeler, barda ısmarlamak, birlikte yemek ve buluşmalar kalpleri doldurur. ♥ işaretli kişilerin kalbi 10'a ulaşınca Gül Buketi ile duygularını açıp sevgili olabilirsin.`));
+      if (R.partner) body.appendChild(ui.el('div', null, `<b style="color:#c8354a">♥ Sevgilin: ${esc(N.byId[R.partner].name)}</b> <span class="small-t muted">· ${today - (R.since || today)} gündür birliktesiniz · ${R.dates || 0} buluşma</span>`));
+      const list = ui.el('div', 'col rel-list');
+      for (const d of order) {
+        const st = N.st(d.id), it = ui.el('div', 'list-item rel-item');
+        const stat = N.status(d.id);
+        const statCol = stat === 'Sevgili' ? '#c8354a' : stat === 'Kalbi Dolu' ? '#e85a7a' : stat === 'Yabancı' ? '#8a7a6a' : '#3f7a3a';
+        const known = (st.known || []).slice(0, 6).map(k => `<img class="ic-s" title="${esc(AK.Items.get(k) ? AK.Items.get(k).name : k)}" src="${AK.Icons.url(AK.Icons.forStack({ id: k }))}">`).join('');
+        const n = N.get(d.id);
+        const inMap = n && n.inside && AK.BldInt.REG[n.inside] && AK.World.get(AK.BldInt.REG[n.inside].map);
+        const where = !st.met ? '' : inMap ? inMap.name : 'Kasabada';
+        it.innerHTML = `<canvas class="sv-port" width="16" height="16" data-npc="${d.id}" style="width:calc(var(--u)*20px);height:calc(var(--u)*20px);image-rendering:pixelated;background:#d9bf8c;border:2px solid #7a4f2a;${st.met ? '' : 'filter:brightness(.3)'}"></canvas>
+          <div class="grow"><b>${st.met ? esc(d.name) : '???'}</b> ${d.romance ? '<span title="Sevgili olunabilir" style="color:#e85a7a">♥</span>' : ''} <span class="small-t muted">${st.met ? esc(d.title) : 'Henüz tanışmadınız'}</span>
+            <div class="rel-hearts">${heartsHTML(d.id)}</div>
+            <div class="small-t"><span style="color:${statCol}">${stat}</span>${st.met ? ` · Konuşma ${st.talkDay === today ? '<span class="good">✓</span>' : '—'} · Hediye ${st.giftDay === today ? '<span class="good">✓</span>' : '—'} · <span class="muted">${esc(where)}</span>` : ''}</div>
+            ${known ? `<div class="small-t muted">Sevdikleri: ${known}</div>` : ''}</div>`;
+        list.appendChild(it);
+      }
+      body.appendChild(list);
+      ui.panel({ title: 'İlişkiler', body, width: '38rem', foot: [ui.btn('Kapat', () => ui.closeTop())] });
+      body.querySelectorAll('canvas.sv-port').forEach(c => { const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(AK.Chars.portrait(AK.NPCs.byId[c.dataset.npc].look), 0, 0); });
+    },
     orderList(list, canDeliver) {
       const ui = UI(), S = AK.Shop;
       const os = AK.state.shop.orders;
@@ -325,7 +354,8 @@
         <div><b>E / F</b> veya <b>sağ tık</b> — Konuş, etkileşime geç, kapıdan gir</div>
         <div><b>Boşluk / C</b> veya <b>sol tık</b> — Seçili aleti kullan / yemek ye</div>
         <div><b>1–0</b> veya <b>fare tekerleği</b> — Hızlı erişim çubuğundan seç</div>
-        <div><b>I / Tab</b> — Çanta · <b>J</b> — Görevler · <b>K</b> — Koleksiyon · <b>Esc</b> — Menü</div>
+        <div><b>I / Tab</b> — Çanta · <b>J</b> — Görevler · <b>K</b> — Koleksiyon · <b>R</b> — İlişkiler · <b>Esc</b> — Menü</div>
+        <div><b>Otururken</b> Boşluk ile yiyip içebilirsin; yanında oturan biri varsa birlikte yemiş olursunuz.</div>
         <div class="sep"></div>
         <div><b>Oyun döngüsü:</b> Keşfet → Kaz → Eser bul → Temizle → Sat ya da Bağışla → Para kazan → Ekipman/Dükkân geliştir → Yeni bölge aç</div></div>`,
         foot: [ui.btn('Tamam', () => ui.closeTop())],

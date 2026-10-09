@@ -2,20 +2,26 @@
 (function () {
   const U = AK.U, T = AK.T, S = AK.Spr;
   const W = AK.World;
-  const MW = 78, MH = 52;
+  const MW = 104, MH = 52;
 
   // NPC'lerin kullandığı kapı ve noktalar (karo koordinatları)
   const DOORS = {
     house_player: [6, 34], house_nermin: [14, 34], house_defne: [43, 34], inn: [51, 34], komsu: [22, 34], postane: [35, 34],
     museum: [16, 20], library: [6, 20], shop: [42, 20], smithy: [52, 20], store: [45, 11], restaurant: [29, 13],
     belediye: [15, 10], warehouse: [69, 20],
+    // Doğu Mahallesi
+    bar: [79, 20], cicekci: [89, 20],
+    house_emre: [78, 32], house_elif: [89, 32], house_zeynep: [96, 32],
+    house_baris: [78, 43], house_aile: [89, 43], house_bekir: [96, 43],
   };
   const SPOTS = {
     fountain_w: [27, 22, 'right'], fountain_e: [32, 22, 'left'], fountain_s: [30, 25, 'up'],
     bench_w: [24, 27, 'down'], bench_e: [35, 27, 'down'], board: [26, 18, 'up'], plaza_n: [30, 17, 'down'],
     park_w: [23, 38, 'right'], park_e: [36, 38, 'left'], pond: [31, 37, 'down'], library_front: [8, 23, 'down'],
     garden: [11, 36, 'down'], restaurant_front: [31, 15, 'down'], smithy_front: [53, 22, 'left'], stall: [34, 20, 'up'],
-    bridge: [61, 23, 'down'], well: [19, 28, 'left'], pier: [61, 32, 'down'],
+    bridge: [61, 23, 'down'], well: [19, 28, 'left'], pier: [61, 33, 'down', 'fish'],
+    easel: [25, 37, 'right', 'paint'], busk: [27, 27, 'down', 'guitar'], busstop: [5, 24, 'left'],
+    garden_z: [96, 21, 'up'], east_sq: [85, 27, 'down'], pier_bench: [64, 30, 'down'], east_w: [82, 34, 'down'],
   };
 
   const sz = () => AK.Time.season() === 3;
@@ -43,6 +49,15 @@
     smithy: () => ({ key: 'sm', w: 7, fh: 5, wallH: 50, extra: 32, wall: 'brick', wallCol: '#9a4a3a', trim: '#3b3540', roof: 'gable', roofCol: '#4a4a5a', door: 3, doorCol: '#3b3540', windows: [0.6], forge: 4.6, chimney: 5.6, chimCol: '#7a3a2e', sign: 'DEMİRCİ', signBg: '#d8c8b0', snow: sz() }),
     store: () => ({ key: 'st', w: 7, fh: 5, wallH: 50, extra: 32, wall: 'plaster', wallCol: '#f0e0b8', trim: '#6a4a2a', roof: 'front', roofCol: '#c8783a', door: 3, doorCol: '#4f7a45', doorWin: true, windows: [0.8, 5.2], winStyle: 'shop', awning: ['#4f9a45', '#fff6e0'], sign: 'MAĞAZA', signBg: '#fff6e0', lamp: true, snow: sz() }),
     restaurant: () => ({ key: 're', w: 8, fh: 5, wallH: 50, extra: 32, wall: 'plaster', wallCol: '#f4e4c4', trim: '#7a3a2a', roof: 'hip', roofCol: '#c8453a', door: 3, doorCol: '#7a3a2a', doorWin: true, windows: [0.7, 6.3], winBox: true, curtains: '#e8c070', awning: ['#c8453a', '#fff6e0'], sign: "LALE'NİN MUTFAĞI", signBg: '#fff6e0', chimney: 6.2, lamp: true, snow: sz() }),
+    // ---- Doğu Mahallesi ----
+    bar: () => ({ key: 'bar', w: 8, fh: 5, wallH: 50, extra: 32, wall: 'brick', wallCol: '#7a3e3a', trim: '#2a1a24', roof: 'gable', roofCol: '#2f4a5a', door: 3, doorStyle: 'double', doorCol: '#5a2a2a', doorWin: true, windows: [0.7, 6.3], winBox: true, curtains: '#e8a040', awning: ['#2a3a4a', '#d8c070'], sign: 'FENER BAR', signBg: '#2a1a2a', signFg: '#ff7ab8', signFrame: '#c9a050', chimney: 6.4, lamp: true, snow: sz() }),
+    cicekci: () => ({ key: 'flo', w: 6, fh: 4, wallH: 44, extra: 30, wall: 'plaster', wallCol: '#f4e6ea', trim: '#4f7a45', roof: 'front', roofCol: '#d86a8a', gableCol: '#fff0f4', door: 2, doorCol: '#4f7a45', doorWin: true, windows: [0.4, 3.6], winStyle: 'shop', goods: ['#e85a7a', '#f2c14e'], awning: ['#e87a9a', '#fff6f0'], sign: 'ÇİÇEK', signBg: '#fff0f4', signFg: '#a8354a', lamp: true, snow: sz() }),
+    house_emre: () => ({ key: 'hem', w: 6, fh: 4, wallH: 44, extra: 30, wall: 'vwood', wallCol: '#5f8fb0', trim: '#f2ead8', roof: 'gable', roofCol: '#3f5a6a', door: 2, doorCol: '#f2ead8', windows: [0.4, 3.6], shutters: '#f2ead8', winBox: true, chimney: 4.6, snow: sz() }),
+    house_elif: () => ({ key: 'hel', w: 6, fh: 4, wallH: 44, extra: 30, wall: 'plaster', wallCol: '#f2d890', trim: '#7a4a6a', roof: 'hip', roofCol: '#7a5a9a', door: 2, doorCol: '#7a4a6a', doorStyle: 'arch', windows: [0.4, 3.6], winStyle: 'arch', curtains: '#c8a0e0', winBox: true, dormer: 2, snow: sz() }),
+    house_zeynep: () => ({ key: 'hze', w: 6, fh: 4, wallH: 44, extra: 30, wall: 'timber', wallCol: '#fbeef0', beam: '#8a4a5a', trim: '#8a4a5a', roof: 'hip', roofCol: '#c85a6a', door: 2, doorCol: '#8a4a5a', windows: [0.4, 3.6], winBox: true, curtains: '#f2a8c0', chimney: 0.7, ivy: true, snow: sz() }),
+    house_baris: () => ({ key: 'hba', w: 6, fh: 4, wallH: 44, extra: 30, wall: 'wood', wallCol: '#c8784a', trim: '#3b2a20', roof: 'front', roofCol: '#4a6a3a', gableCol: '#e8b880', gableWin: true, door: 2, doorCol: '#2f5a6a', windows: [0.4, 3.6], shutters: '#2f5a6a', worn: true, snow: sz() }),
+    house_aile: () => ({ key: 'hai', w: 6, fh: 4, wallH: 44, extra: 30, wall: 'brick', wallCol: '#b8704a', trim: '#4a3020', roof: 'hip', roofCol: '#8a3a2e', door: 2, doorCol: '#3d6aa8', doorWin: true, windows: [0.4, 3.6], winBox: true, shutters: '#3d6aa8', chimney: 4.5, dormer: 2, lamp: true, snow: sz() }),
+    house_bekir: () => ({ key: 'hbe', w: 6, fh: 4, wallH: 44, extra: 30, wall: 'stone', wallCol: '#a8b0b8', trim: '#2a3a4a', roof: 'gable', roofCol: '#2a3a5a', door: 2, doorCol: '#2a3a4a', windows: [0.4, 3.6], winStyle: 'arch', chimney: 4.4, worn: true, snow: sz() }),
   };
 
   function building(m, id, bx, by, w, fh, door) {
@@ -86,7 +101,7 @@
     W.fill(m, 59, 2, 5, MH - 4, T.SAND);
     W.fill(m, 60, 2, 3, MH - 4, T.WATER);
     // yollar
-    W.fill(m, 0, 22, 23, 2, T.PATH); W.fill(m, 37, 22, 37, 2, T.PATH);
+    W.fill(m, 0, 22, 23, 2, T.PATH); W.fill(m, 37, 22, 63, 2, T.PATH);
     W.fill(m, 59, 22, 5, 2, T.BRIDGE);
     W.fill(m, 22, 15, 16, 14, T.PLAZA);
     W.fill(m, 29, 14, 1, 1, T.PATH);
@@ -95,7 +110,11 @@
     W.fill(m, 29, 29, 2, 6, T.PATH);
     W.fill(m, 3, 35, 54, 2, T.PATH);
     W.fill(m, 10, 11, 15, 1, T.PATH); W.fill(m, 10, 12, 1, 10, T.PATH); W.fill(m, 24, 12, 1, 3, T.PATH);
-    for (const [x, y] of [[6, 21], [16, 21], [42, 21], [52, 21], [69, 21], [15, 11]]) W.set(m, x, y, T.PATH);
+    for (const [x, y] of [[6, 21], [16, 21], [42, 21], [52, 21], [69, 21], [15, 11], [79, 21], [89, 21]]) W.set(m, x, y, T.PATH);
+    // Doğu Mahallesi sokakları
+    W.fill(m, 84, 24, 2, 22, T.PATH);
+    W.fill(m, 74, 33, 27, 2, T.PATH); W.fill(m, 74, 44, 27, 2, T.PATH);
+    W.fill(m, 83, 25, 4, 3, T.PLAZA);
     // iskele (nehir)
     W.fill(m, 60, 33, 3, 1, T.BRIDGE);
     // park & gölet
@@ -120,6 +139,15 @@
     building(m, 'postane', 33, 31, 6, 4, 2);
     building(m, 'house_defne', 41, 31, 6, 4, 2);
     building(m, 'inn', 49, 31, 6, 4, 2);
+    // Doğu Mahallesi
+    building(m, 'bar', 76, 16, 8, 5, 3);
+    building(m, 'cicekci', 87, 17, 6, 4, 2);
+    building(m, 'house_emre', 76, 29, 6, 4, 2);
+    building(m, 'house_elif', 87, 29, 6, 4, 2);
+    building(m, 'house_zeynep', 94, 29, 6, 4, 2);
+    building(m, 'house_baris', 76, 40, 6, 4, 2);
+    building(m, 'house_aile', 87, 40, 6, 4, 2);
+    building(m, 'house_bekir', 94, 40, 6, 4, 2);
 
     // kapı geçişleri
     const svc = (id) => () => AK.Services.open(id);
@@ -191,7 +219,7 @@
     prop(m, { kind: 'barrel', x: 73 * 16 + 8, y: 20 * 16, solid: [73, 19, 1, 1], spr: S.barrel() });
     prop(m, { kind: 'sacks', x: 67 * 16, y: 25 * 16, solid: [66, 24, 2, 1], spr: S.sacks() });
     prop(m, { kind: 'boat', x: 61 * 16 + 8, y: 36 * 16, spr: S.rowboat(), update: o => { o.oy = Math.round(Math.sin(W.t * 1.5) * 1); } });
-    prop(m, { kind: 'post', x: 63 * 16 + 8, y: 34 * 16, solid: [63, 33, 1, 1], spr: S.lanternPost(), light: { dy: -24, r: 34, c: '#ffd890', a: 0.9, fl: true } });
+    prop(m, { kind: 'post', x: 64 * 16 + 8, y: 33 * 16, solid: [64, 32, 1, 1], spr: S.lanternPost(), light: { dy: -24, r: 34, c: '#ffd890', a: 0.9, fl: true } });
     for (const x of [59, 63]) for (const y of [21, 24]) prop(m, { kind: 'rail', x: x * 16 + 8, y: (y + 1) * 16, solid: [x, y, 1, 1], spr: S.bridgeRail() });
     for (const x of [60, 61, 62]) { prop(m, { kind: 'rail', x: x * 16 + 8, y: 22 * 16 - 1, spr: S.bridgeRail(), oy: 0 }); prop(m, { kind: 'rail', x: x * 16 + 8, y: 25 * 16 - 2, spr: S.bridgeRail() }); }
     prop(m, { kind: 'signpost', x: 58 * 16 + 8, y: 25 * 16, solid: [58, 24, 1, 1], spr: S.signpost('LİMAN', 'MEYDAN') });
@@ -231,6 +259,36 @@
     // nehirde ördek
     prop(m, { kind: 'duck', x: 61 * 16, y: 10 * 16, spr: o => S.duck(Math.floor(W.t * 3) % 2, o.vx < 0 ? -1 : 1), update(o) { if (AK.Time.season() === 3) { o.hidden = true; return; } const ny = (10 + ((W.t * 0.4) % 30)) * 16; o.vx = 1; o.x = 61 * 16 + Math.sin(W.t) * 6; o.y = ny; } });
 
+    // ---------------- Doğu Mahallesi süsleri ----------------
+    prop(m, { kind: 'easel', x: 26 * 16 + 8, y: 38 * 16, solid: [26, 37, 1, 1], shadow: [14, 4, 3], spr: () => S.easel(AK.Time.season()), int: () => AK.UI.toast(AK.NPCs.near('elif', 25, 37) ? 'Elif fırçasını tuvalde gezdiriyor. Gölün ışığını yakalamaya çalışıyor.' : 'Elif\'in tuvali: gölün yarım kalmış bir resmi. Renkler hâlâ ıslak.', 'star'), prompt: 'Tuval' });
+    prop(m, { kind: 'signpost', x: 75 * 16 + 8, y: 22 * 16, solid: [75, 21, 1, 1], spr: S.signpost('DOĞU MAH.', 'LİMAN') });
+    for (const [x, y] of [[85, 20], [74, 25], [86, 31], [83, 37], [93, 37], [83, 47], [99, 25]]) {
+      prop(m, { kind: 'lamp', x: x * 16 + 8, y: (y + 1) * 16, solid: [x, y, 1, 1], shadow: [10, 4, 3], spr: () => S.lamp(AK.Time.isDark() ? 1 : 0), light: { dy: -30, r: 46, c: '#ffd890', a: 0.95, fl: true }, emit: [[5, 4, 6, 5]] });
+    }
+    bench(87, 26, 'east_sq'); bench(79, 36, 'east_w'); bench(65, 29, 'pier_bench');
+    prop(m, { kind: 'pump', x: 84 * 16 + 8, y: 26 * 16, solid: [84, 25, 1, 1], shadow: [18, 6, 3], spr: () => S.pump(AK.Time.season()), int: () => AK.UI.toast('Mahalle çeşmesi. Suyu buz gibi; Bekir Dede "denizden bile tatlı" diyor.', 'museum'), prompt: 'Çeşme' });
+    // bar terası
+    prop(m, { kind: 'umbrella', x: 85 * 16, y: 18 * 16, solid: [84, 17, 2, 1], shadow: [30, 7, 4], spr: S.umbrellaTable('#2f4a5a') });
+    prop(m, { kind: 'barrel', x: 75 * 16 + 8, y: 18 * 16, solid: [75, 17, 1, 1], shadow: [12, 4, 3], spr: S.barrel() });
+    prop(m, { kind: 'barrel', x: 75 * 16 + 8, y: 20 * 16, solid: [75, 19, 1, 1], shadow: [12, 4, 3], spr: S.barrel() });
+    // Zeynep'in çiçek bahçesi
+    for (let x = 94; x <= 99; x++) for (const y of [16, 20]) if (!(y === 20 && x === 96)) prop(m, { kind: 'fence', x: x * 16 + 8, y: (y + 1) * 16, solid: [x, y, 1, 1], spr: () => S.fence('h', AK.Time.season()) });
+    for (let y = 17; y <= 19; y++) for (const x of [94, 99]) prop(m, { kind: 'fence', x: x * 16 + 8, y: (y + 1) * 16, solid: [x, y, 1, 1], spr: () => S.fence('p', AK.Time.season()) });
+    for (let y = 17; y <= 19; y++) for (let x = 95; x <= 98; x++) if (!(x === 96 && y === 19)) prop(m, { kind: 'fbed', flat: true, x: x * 16 + 8, y: (y + 1) * 16, spr: () => S.flowerBed(x * 3 + y, AK.Time.season()) });
+    prop(m, { kind: 'sign', x: 93 * 16 + 8, y: 21 * 16, solid: [93, 20, 1, 1], spr: S.sign(), int: () => AK.UI.toast('"Zeynep\'in Bahçesi — Lütfen çiçekleri koparmayın, dükkândan isteyin!"', 'heart'), prompt: 'Tabela' });
+    // evlerin çevresi
+    const plate = (x, y, txt) => prop(m, { kind: 'plate', x: x * 16 + 8, y: (y + 1) * 16, solid: [x, y, 1, 1], spr: S.sign(), int: () => AK.UI.toast(txt, 'heart'), prompt: 'Kapı tabelası' });
+    plate(75, 32, 'Emre Yıldız — Balıkçı. "Ağlar kurumaya asılıdır, dokunmayınız!"'); plate(86, 32, 'Elif Aydın — Ressam. Atölye ziyaretleri akşamüstü.');
+    plate(93, 32, 'Zeynep Kaya — Çiçekçi.'); plate(75, 43, 'Barış Ozan — "Müzisyen. Kapıyı çalarsan şarkı söylerim."');
+    plate(86, 43, 'Ayşe & Oğuz Demir — Hoş geldiniz!'); plate(93, 43, 'Kaptan Bekir — "Eski denizci, yeni dost."');
+    prop(m, { kind: 'net', x: 82 * 16 + 8, y: 31 * 16, solid: [82, 30, 1, 1], shadow: [16, 4, 3], spr: S.netRack(), int: () => AK.UI.toast('Emre\'nin balık ağları kurumaya asılmış. Tuzlu bir deniz kokusu var.', 'museum'), prompt: 'Ağlar' });
+    prop(m, { kind: 'laundry', x: 83 * 16, y: 40 * 16 + 4, spr: S.laundry() });
+    prop(m, { kind: 'wood', x: 82 * 16 + 4, y: 43 * 16 - 2, solid: [82, 42, 1, 1], spr: S.firewood() });
+    prop(m, { kind: 'swing', x: 89 * 16 + 8, y: 37 * 16, solid: [88, 36, 3, 1], shadow: [40, 6, 4], spr: S.swing(), int: () => AK.UI.toast('Ayşe ile Oğuz\'un bahçesindeki salıncak. Oğuz onu kendi elleriyle yapmış.', 'heart'), prompt: 'Salıncak' });
+    prop(m, { kind: 'anchor', x: 100 * 16 + 8, y: 43 * 16, solid: [100, 42, 1, 1], shadow: [16, 4, 3], spr: S.anchor(), int: () => AK.UI.toast('Paslı koca bir gemi çıpası. Bekir Dede\'nin eski gemisinden kalmış.', 'museum'), prompt: 'Çıpa' });
+    for (const [x, y, v] of [[93, 28, 1], [86, 39, 2], [75, 39, 0], [100, 31, 3], [82, 32, 2], [93, 39, 3]]) prop(m, { kind: 'pot', x: x * 16 + 8, y: (y + 1) * 16, solid: [x, y, 1, 1], spr: () => S.flowerpot(v, AK.Time.season()) });
+    prop(m, { kind: 'fcart', x: 92 * 16, y: 25 * 16 - 2, solid: [91, 24, 2, 1], shadow: [36, 6, 4], spr: () => S.flowerCart(AK.Time.season()), int: () => AK.Services.open('cicekci'), prompt: 'Çiçek Arabası' });
+
     // ---------------- ağaçlar, çalılar, çiçekler ----------------
     const occupied = (x, y) => {
       if (x < 2 || y < 2 || x > MW - 3 || y > MH - 3) return true;
@@ -238,6 +296,7 @@
       for (const o of m.objects) if (o.solid) { const [a, b, w, h] = o.solid; if (x >= a - 1 && x <= a + w && y >= b - 1 && y <= b + h) return true; }
       for (const wp of m.warps) if (Math.abs(wp.x - x) <= 1 && y >= wp.y && y <= wp.y + 2) return true;
       if (x >= 3 && x <= 12 && y >= 37 && y <= 44) return true;
+      if (x >= 93 && x <= 100 && y >= 15 && y <= 21) return true;
       return false;
     };
     const clear3 = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (occupied(x + i, y + j)) return false; return true; };
@@ -307,7 +366,7 @@
   // tüm binaların kapılarını iç mekânlara bağla (iç mekânlar kurulduktan sonra çağrılır)
   function linkDoors() {
     const m = W.get('town'), REG = AK.BldInt.REG;
-    for (const b of ['library', 'smithy', 'store', 'restaurant', 'belediye', 'postane', 'warehouse', 'inn', 'house_nermin', 'house_defne', 'komsu']) {
+    for (const b of ['library', 'smithy', 'store', 'restaurant', 'belediye', 'postane', 'warehouse', 'inn', 'house_nermin', 'house_defne', 'komsu', 'bar', 'cicekci', 'house_emre', 'house_elif', 'house_zeynep', 'house_baris', 'house_aile', 'house_bekir']) {
       const [x, y] = DOORS[b], R = REG[b];
       m.warps.push({ x, y, to: R.map, tx: R.entry[0], ty: R.entry[1], dir: 'up', need: () => AK.BldInt.closedMsg(b) });
     }

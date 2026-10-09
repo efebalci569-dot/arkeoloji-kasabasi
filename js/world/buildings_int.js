@@ -44,6 +44,7 @@
       case 'chairL': return [{ x: o.x - 1, y: o.y - 8, dir: 'left', sort: o.y + 1 }];
       case 'armchair': return [{ x: o.x, y: o.y - 8, dir: 'down', sort: o.y + 1 }];
       case 'stool': return [{ x: o.x, y: o.y - 9, dir: 'down', sort: o.y + 1 }];
+      case 'stoolUp': return [{ x: o.x, y: o.y - 9, dir: 'up', sort: o.y + 1 }];
       default: return [];
     }
   }
@@ -304,6 +305,167 @@
     });
   }
 
+  // =================== FENER BAR ===================
+  function bar() {
+    const m = newRoom('int_bar', 'bar', 18, 12, 8, 'bar', 'dark', { name: 'Fener Bar', music: 'bar' });
+    put(m, 'shelf', 1, 2, S.shelfTall('bottles', 1), 2); put(m, 'shelf', 3, 2, S.shelfTall('bottles', 2), 2);
+    m.decals.push({ x: 5 * 16 + 4, y: 9, spr: S.neon('FENER BAR', '#ff7ab8') });
+    m.decals.push({ x: 8 * 16 + 4, y: 6, spr: S.wallGuitar() });
+    put(m, 'counter', 1, 4, S.barCounter(6), 6, { int: () => AK.Services.open('bar'), prompt: 'Sipariş ver', oy: 2 });
+    const stools = [];
+    for (const x of [2, 4, 6]) stools.push(seat(m, 'stoolUp', x, 5, S.barStool()));
+    put(m, 'juke', 11, 2, () => S.jukebox(Math.floor(W.t * 2) % 3), 1, {
+      light: { dy: -16, r: 30, c: '#ff9ad8', a: 0.8, fl: true }, prompt: 'Müzik kutusu',
+      int: () => { const L = ['bar', 'festival', 'night', 'town']; m.music = L[(L.indexOf(m.music) + 1) % L.length]; AK.Audio.music(m.music); AK.Audio.sfx('coin'); AK.UI.toast('Müzik kutusuna bozuk para attın. ' + { bar: 'Fasıl çalıyor.', festival: 'Hareketli bir şarkı başladı!', night: 'Yavaş bir parça...', town: 'Kasabanın türküsü.' }[m.music], 'star'); },
+    });
+    // sahne
+    deco(m, 'stage', 12, 3, S.stage(5, 2), 5, { flat: true, y: 4 * 16 + 4, x: 14.5 * 16 });
+    put(m, 'speaker', 12, 2, S.speaker()); put(m, 'speaker', 16, 2, S.speaker());
+    deco(m, 'mic', 15, 3, S.mic(), 1, { oy: 2 });
+    m.decals.push({ x: 9 * 16 + 4, y: 14, spr: S.dartboard() });
+    W.add(m, { kind: 'dart', x: 9 * 16 + 12, y: 2 * 16 + 4, irect: [9 * 16 + 1, 10, 22, 30], prompt: 'Dart at', int: () => dart() });
+    // masalar
+    const chairs = [];
+    const table = (tx, ty, spr, date) => {
+      put(m, 'table', tx, ty, spr, 2, { light: { dy: -16, r: date ? 40 : 30, c: date ? '#ffb070' : '#ffcf80', a: date ? 1 : 0.75, fl: true } });
+      const a = seat(m, 'chairR', tx - 1, ty, S.chairSide('#5a2a22', 0)), b = seat(m, 'chairL', tx + 2, ty, S.chairSide('#5a2a22', 1));
+      if (date) { a.dateSeat = true; return b; }
+      chairs.push(a, b);
+      return null;
+    };
+    table(10, 6, S.tableCloth('#2f4a5a')); table(14, 6, S.tableCloth('#5a2a3a'));
+    const dateChair = table(10, 9, S.dateTable(), true); table(14, 9, S.tableCloth('#2f4a5a'));
+    put(m, 'btable', 3, 8, S.barrelTable());
+    const s1 = seat(m, 'stool', 2, 8, S.barStool()), s2 = seat(m, 'stool', 4, 8, S.barStool());
+    put(m, 'barrel', 1, 6, S.barrel()); put(m, 'crates', 6, 10, S.crates(0));
+    put(m, 'plant', 1, 10, S.plant(1));
+    m.lights = () => {
+      const L = [{ x: 4 * 16, y: 4 * 16, r: 64, c: '#ffcf80', a: 0.85 }, { x: 103, y: 18, r: 46, c: '#ff7ab8', a: 0.75 }, { x: 4 * 16, y: 8 * 16, r: 34, c: '#ffcf80', a: 0.6 }];
+      const stageOn = AK.NPCs.list.some(n => n.inside === 'bar' && n.pose === 'guitar' && !AK.NPCs.walking(n));
+      L.push({ x: 14.5 * 16, y: 3 * 16, r: stageOn ? 62 : 36, c: stageOn ? '#9ad8ff' : '#ffcf80', a: stageOn ? 0.9 : 0.4 });
+      return L;
+    };
+    REG.bar.spots.can = { approach: [4, 3], dir: 'down' };
+    REG.bar.spots.stage = { approach: [14, 3], dir: 'down', pose: 'guitar' };
+    const below = o => [Math.floor(o.x / 16), Math.floor(o.y / 16)];
+    REG.bar.seats = stools.concat(chairs, [s1, s2]).map(o => npcSeat(o, 0, below(o)));
+    REG.bar.spots.date = npcSeat(dateChair, 0, below(dateChair));
+  }
+  function dart() {
+    const F = AK.state.flags, d = AK.Time.abs();
+    if (F.dartDay === d && F.dartN >= 3) { AK.UI.toast('Bugünlük dart hakkın bitti. Can: "Kolun yorulmasın, yarın gel!"', 'lock'); return; }
+    if (F.dartDay !== d) { F.dartDay = d; F.dartN = 0; }
+    F.dartN++;
+    const tp = AK.state.player.tipsy || 0;
+    const throws = [0, 1, 2].map(() => { const r = Math.random() - tp / 400; return r > 0.93 ? 50 : r > 0.75 ? 25 : r > 0.4 ? U.ri(10, 20) : r > 0.1 ? U.ri(1, 9) : 0; });
+    const sum = throws.reduce((a, b) => a + b, 0);
+    AK.Audio.sfx('dig');
+    let msg = `Dart: ${throws.join(' + ')} = ${sum} puan.`;
+    if (sum >= 100) { msg += ' Muhteşem! Can sana bir limonata ısmarladı.'; AK.Inv.add({ id: 'limonata', n: 1 }); AK.Audio.sfx('quest'); }
+    else if (sum >= 60) msg += ' Fena değil!';
+    else if (tp > 60) msg += ' Hmm, oklar biraz... sallanıyor sanki.';
+    AK.UI.toast(msg, 'star');
+  }
+
+  // =================== ÇİÇEKÇİ ===================
+  function cicekci() {
+    const m = newRoom('int_cicekci', 'cicekci', 12, 9, 5, 'florist', 'light', { name: 'Zeynep\'in Çiçekçisi', music: 'title', tile: T.TILE });
+    put(m, 'fshelf', 1, 2, S.flowerShelf(1), 2, { int: () => AK.Services.open('cicekci'), prompt: 'Çiçekler' });
+    put(m, 'fshelf', 9, 2, S.flowerShelf(4), 2, { int: () => AK.Services.open('cicekci'), prompt: 'Çiçekler' });
+    windowAt(m, 4);
+    put(m, 'counter', 6, 4, S.counter2(3, '#4f7a45', '#e8f2e0', 'register'), 3, { int: () => AK.Services.open('cicekci'), prompt: 'Tezgâh', oy: 2 });
+    for (const [x, y, v] of [[1, 5, 0], [2, 5, 1], [1, 6, 2], [3, 5, 3], [10, 6, 0], [10, 7, 2]]) put(m, 'bucket', x, y, S.flowerBucket(v));
+    put(m, 'wrap', 8, 7, S.wrapTable(), 2);
+    put(m, 'plant', 1, 7, S.plant(1)); put(m, 'plant', 3, 2, S.plant(0));
+    W.add(m, Object.assign(at(3, 7), { kind: 'cat', spr: () => S.cat(Math.floor(W.t * 1.3) % 2), int: () => AK.UI.toast('Zeynep\'in kedisi Fesleğen saksıların arasında uyuyor.', 'heart'), irect: [3 * 16 - 2, 7 * 16, 20, 16], prompt: 'Kediyi sev' }));
+    m.lights = () => [{ x: 6 * 16, y: 4 * 16, r: 70, c: '#fff0d8', a: 0.7 }];
+    REG.cicekci.spots.zeynep = { approach: [7, 3], dir: 'down' };
+  }
+
+  // =================== DOĞU MAHALLESİ EVLERİ ===================
+  function home(id, b, style, name, music) { return newRoom(id, b, 12, 9, 5, style, '', { name, music: music || 'title' }); }
+  function emreHome() {
+    const m = home('int_emre', 'house_emre', 'fisher', 'Emre\'nin Evi');
+    put(m, 'bed', 1, 2, S.bed('#3d6aa8'), 2, { solid: [1, 2, 2, 2], y: 4 * 16 });
+    put(m, 'rods', 3, 2, S.rodRack(), 1, { int: () => AK.UI.toast('Emre\'nin oltaları. En eskisi babasından kalma.', 'museum'), prompt: 'Oltalar' });
+    windowAt(m, 6);
+    put(m, 'tank', 8, 2, () => S.fishTank(Math.floor(W.t * 2) % 7), 2, { int: () => AK.UI.toast('Akvaryumda turuncu bir balık: "Kaptan". Emre onu hiç pişirmeyeceğine yemin etmiş.', 'heart'), prompt: 'Akvaryum' });
+    m.decals.push({ x: 4 * 16 + 4, y: 2 * 16 + 6, spr: S.compassMap() });
+    put(m, 'table', 8, 5, S.table(), 2);
+    const c1 = seat(m, 'chairR', 7, 5, S.chairSide('#3d6aa8', 0)); seat(m, 'chairL', 10, 5, S.chairSide('#3d6aa8', 1));
+    put(m, 'barrel', 1, 7, S.barrel()); deco(m, 'rope', 3, 7, S.ropeCoil());
+    deco(m, 'rug', 2, 5, S.rug('#2f5a7a', 48, 32), 3, { flat: true, oy: 6 });
+    REG.house_emre.spots.emre = npcSeat(c1, 0, [7, 6]);
+  }
+  function elifHome() {
+    const m = home('int_elif', 'house_elif', 'artist', 'Elif\'in Atölyesi');
+    put(m, 'bed', 9, 2, S.bed('#c8a0e0'), 2, { solid: [9, 2, 2, 2], y: 4 * 16 });
+    put(m, 'canvas', 1, 2, S.canvasStack(), 2);
+    windowAt(m, 5);
+    for (const [x, v] of [[3, 0], [7, 2]]) m.decals.push({ x: x * 16 + 6, y: 10, spr: S.artwork(v) });
+    put(m, 'easel', 3, 5, S.easel(1), 1, { int: () => AK.UI.toast('Yarım kalmış bir portre... yüz hatları sana tanıdık geliyor.', 'heart'), prompt: 'Tuval' });
+    put(m, 'ptable', 6, 6, S.paintTable(), 2);
+    const ac = seat(m, 'armchair', 9, 6, S.armchair('#7a4a6a'));
+    deco(m, 'rug', 5, 4, S.rug('#c8a050', 48, 32), 3, { flat: true, oy: 4 });
+    put(m, 'plant', 1, 7, S.plant(1));
+    REG.house_elif.spots.elif = { approach: [2, 5], dir: 'right', pose: 'paint' };
+    REG.house_elif.seats = [npcSeat(ac, 0, [9, 7])];
+  }
+  function zeynepHome() {
+    const m = home('int_zeynep', 'house_zeynep', 'florist', 'Zeynep\'in Evi');
+    put(m, 'bed', 1, 2, S.bed('#f2a8c0'), 2, { solid: [1, 2, 2, 2], y: 4 * 16 });
+    put(m, 'fshelf', 3, 2, S.flowerShelf(2), 2);
+    windowAt(m, 6);
+    put(m, 'dresser', 9, 2, S.dresser('#c87a9a'), 2);
+    const ac = seat(m, 'armchair', 8, 5, S.armchair('#d87a9a'));
+    put(m, 'tea', 9, 5, S.teaTable());
+    for (const [x, y, v] of [[1, 7, 1], [10, 7, 3], [4, 7, 2]]) put(m, 'bucket', x, y, S.flowerBucket(v));
+    deco(m, 'rug', 4, 5, S.rug('#7cc45a', 48, 32), 3, { flat: true, oy: 6 });
+    REG.house_zeynep.spots.zeynep = npcSeat(ac, 0, [8, 6]);
+  }
+  function barisHome() {
+    const m = home('int_baris', 'house_baris', 'music', 'Barış\'ın Evi', 'night');
+    put(m, 'piano', 1, 2, S.piano(), 2, { int: () => { AK.Audio.sfx('quest'); AK.UI.toast('Piyanonun tuşlarına dokundun. Barış: "Fena değil! Bir gün düet yaparız."', 'star'); }, prompt: 'Piyano' });
+    put(m, 'drum', 3, 2, S.drum());
+    windowAt(m, 6);
+    put(m, 'bed', 9, 2, S.bed('#e8c040'), 2, { solid: [9, 2, 2, 2], y: 4 * 16 });
+    m.decals.push({ x: 4 * 16 + 6, y: 6, spr: S.wallGuitar() });
+    put(m, 'speaker', 10, 6, S.speaker());
+    const st = seat(m, 'stool', 3, 5, S.stool());
+    const so = seat(m, 'sofa', 6, 6, S.sofa('#7a3a2a'), 2);
+    deco(m, 'rug', 5, 7, S.rug('#2f5a6a', 48, 24), 3, { flat: true, oy: 2 });
+    REG.house_baris.spots.baris = Object.assign(npcSeat(st, 0, [3, 6]), { pose: 'guitar' });
+    REG.house_baris.seats = [npcSeat(so, 0, [6, 7]), npcSeat(so, 1, [7, 7])];
+  }
+  function aileHome() {
+    const m = home('int_aile', 'house_aile', 'family', 'Ayşe & Oğuz\'un Evi');
+    put(m, 'bed', 1, 2, S.bed('#3d7fd9'), 2, { solid: [1, 2, 2, 2], y: 4 * 16 });
+    put(m, 'crib', 3, 2, S.crib(), 2, { int: () => AK.UI.toast('Bebek Deniz mışıl mışıl uyuyor. Elinde minik bir oyuncak otobüs var.', 'heart'), prompt: 'Beşik' });
+    windowAt(m, 6);
+    put(m, 'stove', 9, 2, S.stove()); put(m, 'kitchen', 10, 2, S.kitchen());
+    put(m, 'table', 7, 5, S.tableCloth('#3d7fd9'), 2, { light: () => min() >= 1080 ? { dy: -16, r: 34, c: '#ffcf80', a: 0.8, fl: true } : null });
+    const a = seat(m, 'chairR', 6, 5, S.chairSide('#8d5d32', 0)), b = seat(m, 'chairL', 9, 5, S.chairSide('#8d5d32', 1));
+    put(m, 'toys', 2, 6, S.toyBox());
+    deco(m, 'rug', 2, 7, S.rug('#c8553d', 48, 24), 3, { flat: true, oy: 2 });
+    put(m, 'plant', 10, 7, S.plant(1));
+    m.decals.push({ x: 4 * 16 + 4, y: 6, spr: S.wallClock() });
+    REG.house_aile.spots.ayse = npcSeat(b, 0, [9, 6]);
+    REG.house_aile.spots.oguz = npcSeat(a, 0, [6, 6]);
+  }
+  function bekirHome() {
+    const m = home('int_bekir', 'house_bekir', 'sailor', 'Kaptan Bekir\'in Evi', 'night');
+    put(m, 'bed', 1, 2, S.bed('#2a3a5a'), 2, { solid: [1, 2, 2, 2], y: 4 * 16 });
+    m.decals.push({ x: 4 * 16, y: 6, spr: S.shipWheel() }, { x: 8 * 16 + 2, y: 8, spr: S.compassMap() });
+    put(m, 'fire', 9, 2, () => S.fireplace(Math.floor(W.t * 6) % 3), 2, { light: { dy: -12, r: 60, c: '#ffa850', a: 0.9, fl: true } });
+    put(m, 'dresser', 3, 2, S.dresser('#5a4a3a'), 2, { int: () => AK.UI.toast('Şifonyerin üstünde şişe içinde bir gemi maketi: "Mavi Martı, 1968".', 'museum'), prompt: 'Gemi maketi' });
+    deco(m, 'ship', 3, 1, S.bottleShip(), 2, { y: 2 * 16 - 4, oy: 0 });
+    const ac = seat(m, 'armchair', 8, 5, S.armchair('#2a3a5a'));
+    put(m, 'tea', 9, 5, S.teaTable());
+    put(m, 'barrel', 1, 7, S.barrel()); deco(m, 'rope', 3, 7, S.ropeCoil());
+    deco(m, 'rug', 6, 6, S.rug('#7a3a2a', 48, 32), 3, { flat: true, oy: 4 });
+    REG.house_bekir.spots.bekir = npcSeat(ac, 0, [8, 6]);
+  }
+
   // =================== AÇILIŞ SAATLERİ ===================
   const hours = {
     library: () => between(480, 1200) ? null : 'Kütüphane kapalı. (08:00–20:00)',
@@ -318,13 +480,27 @@
     house_defne: () => (AK.NPCs.isIn('defne', 'house_defne') && between(420, 1320)) ? null : AK.NPCs.knock('defne'),
     komsu: () => between(540, 1140) ? null : 'Hatice Teyze uyuyor. Kapıda bir not: "09:00\'dan sonra gel yavrum."',
     museum: () => (between(480, 1200) || (AK.Progress.eventToday() === 'muzegecesi' && between(480, 1440))) ? null : 'Müze kapalı. (08:00–20:00)',
+    bar: () => between(960, 120) ? null : 'Fener Bar kapalı. Kapıda tebeşirle yazılmış: "Her akşam 16:00 – 02:00. Bu akşam bekleriz!"',
+    cicekci: () => (between(510, 1020) && AK.Time.weekday() !== 6) ? null : 'Çiçekçi kapalı. (Hafta içi ve cumartesi 08:30–17:00) Zeynep\'i bahçesinde bulabilirsin.',
+    house_emre: () => homeOpen('emre', 'house_emre'),
+    house_elif: () => homeOpen('elif', 'house_elif'),
+    house_zeynep: () => homeOpen('zeynep', 'house_zeynep'),
+    house_baris: () => homeOpen('baris', 'house_baris'),
+    house_aile: () => (AK.NPCs.isIn('ayse', 'house_aile') || AK.NPCs.isIn('oguz', 'house_aile')) && between(480, 1290) ? null : AK.NPCs.knock('ayse'),
+    house_bekir: () => homeOpen('bekir', 'house_bekir'),
   };
+  // ev sahibi evdeyse ve saat uygunsa kapı açık; sevgilinin kapısı her zaman açık (gece hariç)
+  function homeOpen(id, b) {
+    if (AK.NPCs.isIn(id, b) && (between(420, 1320) || (AK.state.rel && AK.state.rel.partner === id && between(420, 1380)))) return null;
+    return AK.NPCs.knock(id);
+  }
 
   AK.BldInt = {
     REG, LOOKS, seatDefs,
     closedMsg(b) { const f = hours[b]; return f ? f() : null; },
     build() {
       library(); smithy(); store(); restaurant(); belediye(); postane(); warehouse(); inn(); nerminHome(); defneHome(); komsu();
+      bar(); cicekci(); emreHome(); elifHome(); zeynepHome(); barisHome(); aileHome(); bekirHome();
       // mevcut iç mekânlar
       REG.museum = { map: 'museum', entry: [14, 17], spots: {}, seats: [] };
       REG.shop = { map: 'shop', entry: [7, 10], spots: {}, seats: [] };

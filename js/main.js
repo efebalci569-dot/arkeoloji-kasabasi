@@ -121,10 +121,12 @@
     draw() {
       const showTarget = this.playing && !AK.UI.blocking();
       AK.World.draw(this.ctx, showTarget);
+      const tp = this.playing && AK.state.player.tipsy;
+      if (tp > 60) { this.ctx.fillStyle = `rgba(255,120,170,${Math.min(0.1, (tp - 60) / 1500).toFixed(3)})`; this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height); }
     },
     updatePrompt() {
       const s = this.scale, cam = AK.World.cam;
-      if (AK.Player.seated) { AK.UI.prompt('<b>E</b> Kalk', (AK.Player.x - cam.x) * s, (AK.Player.y - 30 - cam.y) * s); return; }
+      if (AK.Player.seated) { const sel = AK.Inv.selected(), sd = sel && AK.Items.get(sel.id); AK.UI.prompt('<b>E</b> Kalk' + (sd && sd.type === 'food' ? ` · <b>Boşluk</b> ${sd.drink ? 'İç' : 'Ye'}` : ''), (AK.Player.x - cam.x) * s, (AK.Player.y - 30 - cam.y) * s); return; }
       const f = AK.Player.findInteract(false);
       if (!f) { AK.UI.prompt(null); return; }
       let x, y, text;
@@ -141,7 +143,7 @@
         else this.openMenu('menu');
         return;
       }
-      const map = { KeyI: 'inventory', Tab: 'inventory', KeyJ: 'journal', KeyK: 'collection' };
+      const map = { KeyI: 'inventory', Tab: 'inventory', KeyJ: 'journal', KeyK: 'collection', KeyR: 'relations' };
       const name = map[code];
       if (!name) return;
       if (top) { if (this.openName === name && !top.o.noClose) AK.UI.closeAll(); return; }
@@ -157,6 +159,8 @@
     },
     tick10(m) {
       AK.Shop.offsiteTick();
+      const pl = AK.state.player;
+      if (pl.tipsy > 0) { pl.tipsy = Math.max(0, pl.tipsy - 6); if (!pl.tipsy) AK.UI.toast('Kafan yerine geldi.', 'star'); }
       AK.World.updateMusic();
       // oturan oyuncu yavaşça dinlenir
       if (AK.Player.seated) {
@@ -218,7 +222,9 @@
       const st = AK.state, p = st.player;
       const late = AK.Time.min() >= 1440;
       AK.Law.nightly();
+      AK.Romance.nightly();
       AK.Time.nextDay();
+      p.tipsy = 0;
       AK.Weather.advance(AK.Time.season(), AK.Time.abs());
       st.stats.days++;
       const rare = st.house.disp.filter(s => s && AK.Items.get(s.id).rar >= 2).length;
@@ -229,6 +235,7 @@
       st.daylog = { found: [], sold: [], donated: [], earned: 0, cleaned: 0 };
       AK.Shop.newDay();
       AK.Progress.onNewDay();
+      AK.Romance.morning();
       AK.NPCs.snapAll();
       AK.Customers.list = [];
       AK.World.enter('house', 3, 3, 'down');

@@ -69,7 +69,7 @@
     sell(idx, buyer) {
       const t = this.s.tables[idx];
       if (!t) return 0;
-      const price = Math.round(this.price(t.item, t.pm) * (buyer.payMult || 1));
+      const price = Math.round(this.price(t.item, t.pm) * (buyer.payMult || 1) * (AK.state.flags.elifArt ? 1.05 : 1));
       this.s.tables[idx] = null;
       AK.Game.addMoney(price, 'Satış');
       AK.state.stats.sold++;

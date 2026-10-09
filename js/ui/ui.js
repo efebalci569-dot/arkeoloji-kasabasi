@@ -219,10 +219,13 @@
     refreshTracker() {
       const el = $('quest-tracker');
       const q = AK.Quests.tracked();
-      if (!q) { el.innerHTML = ''; return; }
-      const d = AK.Quests.DEFS[q.id];
-      let h = `<div class="qt-title">${d.story ? 'Hikâye: ' : ''}${U.esc(d.title)}</div>`;
-      d.obj.forEach((o, k) => { h += `<div class="qt-obj ${AK.Quests.objDone(q, k) ? 'done' : ''}">• ${U.esc(AK.Quests.objText(q, k))}</div>`; });
+      const date = AK.Romance && AK.Romance.trackerLine();
+      let h = date ? `<div class="qt-title" style="color:#ff9ab8">${U.esc(date)}</div>` : '';
+      if (q) {
+        const d = AK.Quests.DEFS[q.id];
+        h += `<div class="qt-title">${d.story ? 'Hikâye: ' : ''}${U.esc(d.title)}</div>`;
+        d.obj.forEach((o, k) => { h += `<div class="qt-obj ${AK.Quests.objDone(q, k) ? 'done' : ''}">• ${U.esc(AK.Quests.objText(q, k))}</div>`; });
+      }
       el.innerHTML = h;
     },
     // ölçek

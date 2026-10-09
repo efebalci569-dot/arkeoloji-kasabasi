@@ -55,6 +55,11 @@
       if (this.seated) {
         this.seated.t += dt;
         this.moving = false; this.target = null; this.signal = 0;
+        for (let i = 0; i < 10; i++) if (In.code('Digit' + ((i + 1) % 10))) { AK.Inv.select(i); AK.UI.showToolName(); }
+        if (In.mouse.wheel) { AK.Inv.select((AK.state.inv.sel + (In.mouse.wheel > 0 ? 1 : 9)) % 10); AK.UI.showToolName(); }
+        // otururken yiyip içebilirsin
+        const sel = AK.Inv.selected(), sd = sel && AK.Items.get(sel.id);
+        if (sd && sd.type === 'food' && (In.hit('use') || In.mouse.clicked[0])) { this.eat(sel); return; }
         const moveKey = In.down('up') || In.down('down') || In.down('left') || In.down('right');
         if (this.seated.t > 0.35 && (moveKey || In.hit('interact') || In.hit('use') || In.mouse.clicked[0] || In.mouse.clicked[2])) { this.standUp(); In.eat('interact'); }
         return;
@@ -77,9 +82,12 @@
         else if (dx !== 0 && dy !== 0 && !['left', 'right', 'up', 'down'].includes(this.dir)) this.dir = 'down';
         else if (dx !== 0 && dy !== 0) { const want = [dx > 0 ? 'right' : 'left', dy > 0 ? 'down' : 'up']; if (!want.includes(this.dir)) this.dir = want[0]; }
         const run = In.down('run');
-        let sp = (run ? 112 : 74) * (AK.state.player.energy <= 0 ? 0.6 : 1);
+        const tipsy = AK.state.player.tipsy || 0;
+        let sp = (run ? 112 : 74) * (AK.state.player.energy <= 0 ? 0.6 : 1) * (tipsy > 120 ? 0.85 : 1);
         const len = Math.hypot(dx, dy);
-        const mx = dx / len * sp * dt, my = dy / len * sp * dt;
+        let mx = dx / len * sp * dt, my = dy / len * sp * dt;
+        // çakırkeyif: yürürken hafifçe yalpala
+        if (tipsy > 40) { const w = Math.sin(AK.World.t * 2.6) * Math.min(0.45, tipsy / 300) * sp * dt; if (dy) mx += w; else my += w; }
         if (mx && this.free(this.x + mx, this.y)) this.x += mx;
         else if (mx && !dy) { for (const s of [-1, 1]) if (this.free(this.x + mx, this.y + s * 5) && this.free(this.x, this.y + s * sp * dt)) { this.y += s * sp * dt * 0.8; break; } }
         if (my && this.free(this.x, this.y + my)) this.y += my;
@@ -169,12 +177,27 @@
     eat(st) {
       const def = AK.Items.get(st.id);
       const p = AK.state.player;
-      if (p.energy >= p.maxEnergy) { AK.UI.toast('Şu an aç değilsin.', 'energy'); return; }
+      if (p.energy >= p.maxEnergy && !def.alc && !def.drink) { AK.UI.toast('Şu an aç değilsin.', 'energy'); return; }
       AK.Inv.removeAt(AK.state.inv.sel, 1);
-      p.energy = Math.min(p.maxEnergy, p.energy + def.energy);
+      // oturarak yemek daha keyifli; yanında oturan biri varsa birlikte yemiş olursunuz
+      const seated = !!this.seated;
+      const gain = Math.round(def.energy * (seated ? 1.2 : 1));
+      p.energy = Math.min(p.maxEnergy, p.energy + gain);
       AK.Audio.sfx('eat');
-      this.hold = { id: st.id, n: 1 }; this.holdT = 0.6;
-      AK.World.float(this.x, this.y - 30, `+${def.energy} enerji`, '#7cf06a');
+      if (!seated) { this.hold = { id: st.id, n: 1 }; this.holdT = 0.6; }
+      AK.World.float(this.x, this.y - 30, `+${gain} enerji`, '#7cf06a');
+      if (seated && AK.Romance) {
+        const n = AK.Romance.sharedMeal();
+        if (n) setTimeout(() => { AK.World.float(n.x, n.y - 34, '♥', '#ff8aa8'); AK.UI.toast(`${n.def.name} ile birlikte ${def.drink ? 'içtiniz' : 'yediniz'}. Afiyet olsun! (arkadaşlık +)`, 'heart'); }, 400);
+      }
+      if (def.alc) this.drinkAlc(def.alc);
+      AK.Bus.emit('ate', st.id);
+    },
+    drinkAlc(a) {
+      const p = AK.state.player, before = p.tipsy || 0;
+      p.tipsy = Math.min(300, before + a * 55);
+      if (before <= 60 && p.tipsy > 60) AK.UI.toast('Çakırkeyif oldun. Dünya biraz daha güzel, adımlar biraz daha yalpa...', 'heart');
+      else if (before <= 160 && p.tipsy > 160) AK.UI.toast('Başın dönüyor! Biraz otur, bir ayran iç. (Uyuyunca geçer.)', 'energy');
     },
     holdUp(st) { this.hold = st; this.holdT = 1.2; this.act = null; this.moving = false; },
     updateDetector(dt) {
@@ -183,7 +206,7 @@
       this.signal = 0;
       if (!st || st.id !== 'detector' || !m.hidden || !m.hidden.length) return;
       const used = AK.Exc.dstate(m.id).used;
-      const lv = AK.state.tools.detector || 1, range = 4 + lv * 2;
+      const lv = AK.state.tools.detector || 1, range = 4 + lv * 2 + (AK.state.flags.bekirCompass ? 2 : 0);
       const [px, py] = this.ipoint(), tx = Math.floor(px / 16), ty = Math.floor(py / 16);
       let best = 99;
       for (const h of m.hidden) if (!used.includes(h.sid)) best = Math.min(best, Math.hypot(h.tx - tx, h.ty - ty));

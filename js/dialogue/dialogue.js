@@ -10,13 +10,15 @@
       this.nameEl = this.el.querySelector('.dlg-name');
       this.port = this.el.querySelector('.dlg-portrait canvas');
       this.next = this.el.querySelector('.dlg-next');
+      this.heartsEl = document.createElement('div'); this.heartsEl.className = 'dlg-hearts';
+      this.el.querySelector('.dlg-portrait').appendChild(this.heartsEl);
       this.el.addEventListener('mousedown', e => { if (e.target.closest('.px-btn')) return; this.advance(); });
       AK.Bus.on('key', (code, e) => {
         if (!this.isOpen || AK.UI.panelOpen() || (e && e.repeat)) return;
         if (performance.now() - this.openedAt < 120) return;
         if (['KeyE', 'Space', 'Enter', 'KeyF'].includes(code)) this.advance();
         if (this.choices && this.shown >= this.full.length && this.i >= this.lines.length - 1) {
-          const k = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Digit5: 4 }[code];
+          const k = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Digit5: 4, Digit6: 5, Digit7: 6, Digit8: 7, Digit9: 8 }[code];
           if (k != null && this.choices[k]) this.pick(k);
           if (code === 'Escape') this.pick(this.choices.length - 1);
         } else if (code === 'Escape') { this.i = this.lines.length - 1; this.shown = this.full.length; this.advance(); }
@@ -34,6 +36,15 @@
       if (o.look) pg.drawImage(AK.Chars.portrait(o.look), 0, 0);
       else if (o.icon) pg.drawImage(o.icon, 0, 0);
       this.el.querySelector('.dlg-portrait').style.display = (o.look || o.icon) ? '' : 'none';
+      // kasabalıysa kalpleri göster
+      const def = AK.NPCs && AK.NPCs.DEFS.find(d => d.name === o.name);
+      if (def && AK.state && AK.NPCs.st(def.id).met) {
+        const h = AK.NPCs.hearts(def.id), part = AK.state.rel && AK.state.rel.partner === def.id;
+        let x = '';
+        for (let i = 0; i < 10; i++) x += `<img src="${AK.Icons.url(AK.Icons.ui(i < h ? 'heart' : 'heartE'))}">`;
+        this.heartsEl.innerHTML = x + (part ? '<div class="dlg-rel">♥ Sevgilin</div>' : '');
+        this.heartsEl.style.display = '';
+      } else this.heartsEl.style.display = 'none';
       this.isOpen = true;
       this.openedAt = performance.now();
       this.el.classList.remove('hidden');

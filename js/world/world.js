@@ -254,6 +254,9 @@
       tx = mw <= this.vw ? (mw - this.vw) / 2 : U.clamp(tx, 0, mw - this.vw);
       ty = mh <= this.vh ? (mh - this.vh) / 2 : U.clamp(ty, 0, mh - this.vh);
       this.cam.x = Math.round(tx); this.cam.y = Math.round(ty);
+      // çakırkeyifken kamera hafifçe salınır
+      const tp = !this.camOverride && AK.Game.playing && AK.state.player.tipsy;
+      if (tp > 40) { const a = Math.min(3, tp / 60); this.cam.x += Math.round(Math.sin(this.t * 1.3) * a); this.cam.y += Math.round(Math.cos(this.t * 0.9) * a * 0.6); }
     },
     drawObj(o, ctx, cx, cy) {
       const s = typeof o.spr === 'function' ? o.spr(o, this.t) : o.spr;

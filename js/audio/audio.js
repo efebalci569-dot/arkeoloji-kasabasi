@@ -12,6 +12,7 @@
     museum: { bpm: 76, root: 58, scale: [0, 2, 4, 7, 9, 11], prog: [0, 5, 3, 4], lead: 'sine', dens: 0.42, hat: false, pad: 0.045, bass: 0.06, seed: 67, bell: true },
     desert: { bpm: 88, root: 55, scale: [0, 1, 4, 5, 7, 8, 10], prog: [0, 1, 0, 6], lead: 'triangle', dens: 0.5, hat: true, pad: 0.03, bass: 0.08, seed: 79 },
     title: { bpm: 80, root: 60, scale: [0, 2, 4, 7, 9], prog: [0, 3, 5, 4], lead: 'triangle', dens: 0.5, hat: false, pad: 0.04, bass: 0.07, seed: 3, bell: true },
+    bar: { bpm: 100, root: 57, scale: [0, 1, 4, 5, 7, 8, 10], prog: [0, 3, 4, 0], lead: 'triangle', dens: 0.6, hat: true, pad: 0.035, bass: 0.1, seed: 131 },
     festival: { bpm: 118, root: 62, scale: [0, 2, 4, 5, 7, 9], prog: [0, 3, 4, 4], lead: 'square', dens: 0.75, hat: true, pad: 0.03, bass: 0.1, seed: 97 },
   };
   // 7 notalık diziden derece → yarım ton

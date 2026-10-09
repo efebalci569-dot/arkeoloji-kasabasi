@@ -13,7 +13,7 @@
       seed: (Math.random() * 1e9) | 0,
       time: { day: 1, season: 0, year: 1, min: 360 },
       player: {
-        name: opts.name || 'Kâşif', map: 'house', x: 3 * 16 + 8, y: 3 * 16 + 12, dir: 'down', energy: 100, maxEnergy: 100, money: 500,
+        name: opts.name || 'Kâşif', map: 'house', x: 3 * 16 + 8, y: 3 * 16 + 12, dir: 'down', energy: 100, maxEnergy: 100, money: 500, tipsy: 0,
         look: opts.look || { skin: '#f0c39b', hair: '#5a3a22', hairStyle: 'short', shirt: '#c9a26a', outfit: 'vest', outfitCol: '#7a5a3a', pants: '#5a4a3a', shoes: '#4a3020', hat: 'safari', hatCol: '#d8c08a' },
       },
       inv: { cap: 20, slots, sel: 0 },
@@ -32,6 +32,7 @@
       daylog: { found: [], sold: [], donated: [], earned: 0, cleaned: 0 },
       settings: { music: 0.55, sfx: 0.7 },
       law: { sus: 0, honest: 0, caught: 0, blackSales: 0, legalSales: 0, fines: 0, raid: false, lastCaught: -99 },
+      rel: { partner: null, since: 0, date: null, dates: 0, lastMail: 0 },
     };
   };
 

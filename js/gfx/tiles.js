@@ -200,6 +200,13 @@
     cottage: { paper: '#d8d0e8', stripe: '#c8bedc', wain: '#6a5a8a', top: '#3a3048' },
     study: { paper: '#c8d8d0', stripe: '#b8ccc2', wain: '#3f5a52', top: '#2a3430' },
     ruin: { paper: '#a89880', stripe: '#988870', wain: '#5a4a3a', top: '#2a221c' },
+    bar: { paper: '#3f5a5a', stripe: '#354e4e', wain: '#5a2a22', top: '#1e1418' },
+    florist: { paper: '#e8f2e0', stripe: '#d8e8cc', wain: '#d87a9a', top: '#3a3a2a' },
+    fisher: { paper: '#c8dce8', stripe: '#b8ccdc', wain: '#2f5a7a', top: '#22303a' },
+    artist: { paper: '#f6ecd0', stripe: '#ecdcb8', wain: '#7a4a6a', top: '#3a2a34' },
+    music: { paper: '#c8a888', stripe: '#b89878', wain: '#2f5a6a', top: '#2a2420' },
+    family: { paper: '#f2dcc8', stripe: '#e8ccb4', wain: '#3d6aa8', top: '#3a2a22' },
+    sailor: { paper: '#b8c4cc', stripe: '#a8b4bc', wain: '#2a3a5a', top: '#1e2430' },
   };
   function wallTile(style, part, v) {
     const c = G.canvas(16, 16), g = c.g, W = WALLS[style] || WALLS.house, r = G.rnd('wl', style, part, v);

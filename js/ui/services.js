@@ -26,6 +26,10 @@
     { k: 'bitki', name: 'Saksı Bitkisi', price: 150, desc: 'Biraz yeşillik.' },
   ];
   const MENU = ['cay', 'kahve', 'simit', 'corba', 'menemen', 'borek', 'kofte', 'kebap'];
+  const DRINKS = ['ayran', 'salgam', 'limonata', 'boza', 'bira', 'sarap', 'raki', 'kokteyl'];
+  const MEZE = ['cerez', 'haydari', 'ezme', 'peynir_kavun', 'midye', 'kalamar', 'balik', 'meze_tabagi'];
+  const FLOWERS = ['papatya', 'lale_demet', 'sumbul', 'gul'];
+  const ALC_MAX = 3;
 
   const matsHTML = mats => Object.entries(mats).map(([k, n]) => `<span class="${AK.Inv.count(k) >= n ? 'good' : 'bad'}">${n} ${AK.Items.D[k].name} (${AK.Inv.count(k)})</span>`).join(', ');
   const hasMats = mats => Object.entries(mats).every(([k, n]) => AK.Inv.count(k) >= n);
@@ -43,8 +47,9 @@
     },
     forNpc(n) {
       if (n.id === 'nermin' && n.map === 'museum') return { label: 'Eser bağışla', fn: () => AK.Museum.donatePanel() };
-      const work = { kaya: ['smithy', 'Alet geliştir'], lale: ['restaurant', 'Menü'], riza: ['store', 'Alışveriş'], defne: ['library', 'Araştırma'] }[n.id];
+      const work = { kaya: ['smithy', 'Alet geliştir'], lale: ['restaurant', 'Menü'], riza: ['store', 'Alışveriş'], defne: ['library', 'Araştırma'], can: ['bar', 'Sipariş ver'], zeynep: ['cicekci', 'Çiçek al'] }[n.id];
       if (work && n.inside === work[0]) return { label: work[1], fn: () => this.open(work[0]) };
+      if (n.id === 'zeynep' && n.key === 'garden_z' && !AK.NPCs.walking(n)) return { label: 'Çiçek al', fn: () => this.open('cicekci') };
       if (n.id === 'nermin' && AK.Progress.eventToday() === 'festival' && n.map === 'town') return { label: 'Yarışmaya katıl', fn: () => AK.Progress.contest() };
       return null;
     },
@@ -145,7 +150,7 @@
             if (AK.state.house.furn[f.k]) continue;
             row(AK.Icons.url(AK.Icons.ui('gift')), f.name, f.desc + ' (Evine yerleştirilir)', U.fmt(f.price), money >= f.price, () => buy(f.price, () => { AK.state.house.furn[f.k] = true; ui.toast(`${f.name} evine yerleştirildi!`, 'gift'); show('buy'); }));
           }
-          for (const k of ['simit', 'kart']) { const d = AK.Items.D[k]; row(AK.Icons.url(AK.Icons.misc(k)), d.name, d.desc, d.price, money >= d.price, () => { if (!AK.Inv.canAdd({ id: k, n: 1 })) return ui.toast('Çantan dolu!', 'bag'); buy(d.price, () => AK.Inv.add({ id: k, n: 1 })); }); }
+          for (const k of ['simit', 'kart', 'cikolata', 'kolye']) { const d = AK.Items.D[k]; row(AK.Icons.url(AK.Icons.misc(k)), d.name, d.desc, d.price, money >= d.price, () => { if (!AK.Inv.canAdd({ id: k, n: 1 })) return ui.toast('Çantan dolu!', 'bag'); buy(d.price, () => AK.Inv.add({ id: k, n: 1 })); }); }
         } else if (t === 'sell') {
           const bonus = AK.state.flags.rizaBonus ? 1.2 : 1;
           list.appendChild(ui.el('div', 'small-t muted', `Kaynakları ve kirli eserleri buraya satabilirsin${bonus > 1 ? ' (+%20 dost fiyatı)' : ''}. Temiz eserler dükkânında çok daha iyi fiyata satılır!`));
@@ -202,7 +207,10 @@
         }
       }
       body.appendChild(this.insideList('restaurant'));
-      ui.panel({ title: 'Lale\'nin Restoranı', body, width: '30rem', foot: [ui.btn('Kapat', () => ui.closeTop())] });
+      const foot = [];
+      if (laleIn && AK.NPCs.insideOf('restaurant').some(n => n.id !== 'lale')) foot.push(ui.btn('Birine ısmarla', () => { ui.closeTop(); this.treatPanel('restaurant', ['cay', 'kahve', 'simit', 'corba', 'menemen', 'borek', 'kebap']); }));
+      foot.push(ui.btn('Kapat', () => ui.closeTop()));
+      ui.panel({ title: 'Lale\'nin Restoranı', body, width: '30rem', foot });
       paintPorts(body);
     },
     // ---------------- KÜTÜPHANE ----------------
@@ -356,19 +364,20 @@
       body.querySelectorAll('canvas.sv-port4').forEach(c => { const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(AK.Chars.portrait(AK.BldInt.LOOKS.mert), 0, 0); });
     },
     // ---------------- OTOBÜS ----------------
+    busCost() { const F = AK.state.flags; return F.oguzFree ? 0 : F.oguzBus ? 75 : 150; },
     bus() {
-      const ui = UI(), F = AK.state.flags;
+      const ui = UI(), F = AK.state.flags, cost = this.busCost();
       const body = ui.el('div', 'col');
-      body.appendChild(ui.el('div', 'small-t muted', 'Otobüs uzak kazı bölgelerine gider. Yolculuk 1 saat sürer, bilet 150 altın.'));
+      body.appendChild(ui.el('div', 'small-t muted', `Otobüs uzak kazı bölgelerine gider. Yolculuk 1 saat sürer, bilet ${cost ? cost + ' altın' : 'ücretsiz (Oğuz\'un ikramı)'}.`));
       const dest = (name, sub, open, fn, lock) => {
         const it = ui.el('div', 'list-item');
         it.innerHTML = `<img class="ic" src="${ui.icon(open ? 'bus' : 'lock')}"><div class="grow"><b>${name}</b><div class="small-t ${open ? '' : 'muted'}">${open ? sub : lock}</div></div>`;
-        if (open) it.appendChild(ui.btn('Git (150)', fn, 'small'));
+        if (open) it.appendChild(ui.btn(`Git (${cost})`, fn, 'small'));
         body.appendChild(it);
       };
       dest('Çöl Harabeleri', 'Kum Krallığı\'nın kalıntıları. Nadir altın eserler.', !!F.desertOpen, () => {
         if (!AK.Weather.sitesOpen()) return ui.toast('Kum fırtınası! Bugün sefer yok.', 'storm');
-        buy(150, () => { ui.closeAll(); AK.Time.advance(60); AK.World.go('desert', 23, 30, 'up'); });
+        buy(cost, () => { ui.closeAll(); AK.Time.advance(60); AK.World.go('desert', 23, 30, 'up'); });
       }, F.altarTaken ? 'Kilitli: Nermin Hanım\'dan Keşif Ruhsatı al (müzede 12 eser gerekli).' : 'Kilitli: Kayıp Şehir Haritası\'nın ilk parçasını bulmalısın.');
       dest('Donmuş Dağ', '', false, null, 'Kilitli: Haritanın üçüncü parçası gerekli. (Yakında)');
       dest('Volkanik Bölge', '', false, null, 'Kilitli: Haritanın dördüncü parçası gerekli. (Yakında)');
@@ -377,7 +386,8 @@
     },
     busBack() {
       const ui = UI();
-      ui.confirm('Kasabaya dönmek ister misin? (150 altın, 1 saat)', () => buy(150, () => { AK.Time.advance(60); AK.World.go('town', 5, 23, 'right'); }), null, 'Dön', 'Kal');
+      const cost = this.busCost();
+      ui.confirm(`Kasabaya dönmek ister misin? (${cost} altın, 1 saat)`, () => buy(cost, () => { AK.Time.advance(60); AK.World.go('town', 5, 23, 'right'); }), null, 'Dön', 'Kal');
     },
     // ---------------- İLAN PANOSU ----------------
     board() {
@@ -397,6 +407,93 @@
         <div class="sep"></div>
         <div class="small-t muted">Duyuru: "Müzeye yapılan her bağış kasabamızı biraz daha güzelleştiriyor. — Belediye"</div>`;
       ui.panel({ title: 'İlan Panosu', body, width: '30rem', foot: [ui.btn('Tamam', () => ui.closeTop())] });
+    },
+    // ---------------- FENER BAR ----------------
+    bar(tab) {
+      const ui = UI(), h = AK.Time.min(), F = AK.state.flags, today = AK.Time.abs();
+      if (!(h >= 960 || h < 120)) { this.closed('Fener Bar', 'Bar kapalı. (Her akşam 16:00–02:00)'); return; }
+      if (!AK.NPCs.isIn('can', 'bar')) { this.closed('Fener Bar', 'Can şu an tezgâhta değil. Birazdan döner.', this.insideList('bar')); return; }
+      if (F.alcDay !== today) { F.alcDay = today; F.alcN = 0; }
+      const body = ui.el('div', 'col');
+      body.innerHTML = header('can', 'Hoş geldin! Ne alırsın? İçecekler, mezeler... ya da birine bir tane ısmarla, dostluk böyle başlar.');
+      const tabs = ui.el('div', 'tabbar'), list = ui.el('div', 'col');
+      body.append(tabs, list);
+      const show = t => {
+        tabs.innerHTML = '';
+        [['drink', 'İçecekler'], ['meze', 'Mezeler'], ['treat', 'Ismarla']].forEach(([k, n]) => { const b = ui.el('div', 'tab' + (k === t ? ' on' : ''), n); b.onclick = () => show(k); tabs.appendChild(b); });
+        list.innerHTML = '';
+        if (t === 'treat') { this.treatList(list, 'bar', DRINKS.filter(k => k !== 'kokteyl' || F.kokteyl).concat(['meze_tabagi']), () => show('treat')); return; }
+        if (t === 'drink' && F.canFree && F.canFreeDay !== today) {
+          list.appendChild(ui.btn('Can\'ın ikramı: bedava limonata', () => { if (AK.Inv.add({ id: 'limonata', n: 1 })) { F.canFreeDay = today; ui.toast('Can: "Benden olsun!"', 'heart'); show('drink'); } else ui.toast('Çantan dolu!', 'bag'); }, 'small green'));
+        }
+        if (t === 'drink') list.appendChild(ui.el('div', 'small-t muted', `Alkollü içecekler çakırkeyif yapar: yürüyüşün yalpalar, dart tutmaz. Can günde en fazla ${ALC_MAX} alkollü içki verir (bugün: ${F.alcN}/${ALC_MAX}). Uyuyunca geçer.`));
+        else list.appendChild(ui.el('div', 'small-t muted', 'İpucu: Barda biriyle aynı masada otururken yiyip içersen birlikte yemiş sayılırsınız (arkadaşlık +).'));
+        for (const k of t === 'drink' ? DRINKS : MEZE) {
+          if (k === 'kokteyl' && !F.kokteyl) continue;
+          const d = AK.Items.D[k];
+          let price = d.price;
+          if ((k === 'balik' || k === 'kalamar') && F.emreFish) price = Math.round(price * 0.7);
+          const it = ui.el('div', 'list-item');
+          it.innerHTML = `<img class="ic" src="${AK.Icons.url(AK.Icons.misc(k))}"><div class="grow"><b>${d.name}</b> <span class="small-t good">+${d.energy} enerji</span>${d.alc ? ' <span class="small-t" style="color:#e85a7a">alkollü</span>' : ''}<div class="small-t muted">${d.desc}</div></div><span class="gold">${price}</span>`;
+          const blocked = d.alc && F.alcN >= ALC_MAX;
+          const b = ui.btn(blocked ? 'Yeter!' : 'Al', () => {
+            if (blocked) { AK.Dialog.open({ name: 'Can', look: AK.NPCs.byId.can.look, lines: ['Bu gecelik bu kadar yeter dostum. Sana bir ayran koyayım mı? Benden!'], onEnd: () => { AK.Inv.add({ id: 'ayran', n: 1 }); } }); ui.closeAll(); return; }
+            if (!AK.Inv.canAdd({ id: k, n: 1 })) return ui.toast('Çantan dolu!', 'bag');
+            buy(price, () => { AK.Inv.add({ id: k, n: 1 }); if (d.alc) F.alcN++; AK.Bus.emit('barBuy', k); show(t); });
+          }, 'small');
+          b.disabled = !blocked && AK.state.player.money < price;
+          it.appendChild(b);
+          list.appendChild(it);
+        }
+      };
+      show(tab || 'drink');
+      ui.panel({ title: 'Fener Bar', body, width: '34rem', foot: [talkBtn('can'), ui.btn('Kapat', () => ui.closeTop())] });
+      paintPorts(body);
+    },
+    // bina içindekilere ısmarlama listesi
+    treatList(list, b, pool, redraw) {
+      const ui = UI(), today = AK.Time.abs();
+      const ppl = AK.NPCs.insideOf(b).filter(n => n.def && !(b === 'bar' && n.id === 'can' && n.key !== 'bar:date') && !(b === 'restaurant' && n.id === 'lale'));
+      list.appendChild(ui.el('div', 'small-t muted', 'Birine ısmarlamak arkadaşlığınızı ilerletir (kişi başı günde bir kez). Sevdiği şeyi seçersen çok daha fazla!'));
+      if (!ppl.length) { list.appendChild(ui.el('div', 'muted', 'Şu an burada ısmarlayabileceğin kimse yok.')); return; }
+      for (const n of ppl) {
+        const st = AK.NPCs.st(n.id), done = st.treatDay === today;
+        const it = ui.el('div', 'list-item');
+        it.innerHTML = `<canvas class="sv-port" width="16" height="16" data-npc="${n.id}" style="width:calc(var(--u)*16px);height:calc(var(--u)*16px);image-rendering:pixelated;background:#d9bf8c"></canvas><div class="grow"><b>${esc(n.def.name)}</b> <span class="small-t muted">${AK.NPCs.hearts(n.id)}/10 kalp</span><div class="small-t">${done ? '<span class="good">Bugün ısmarladın ✓</span>' : 'Ne ısmarlamak istersin?'}</div></div>`;
+        if (!done) {
+          const sel = document.createElement('select'); sel.className = 'px-input'; sel.style.pointerEvents = 'auto'; sel.style.maxWidth = '11rem';
+          for (const k of pool) { const d = AK.Items.D[k]; if (d.alc && (n.id === 'ayse' || n.id === 'zeynep' && k === 'raki')) continue; const o = document.createElement('option'); o.value = k; o.textContent = `${d.name} (${d.price})`; sel.appendChild(o); }
+          it.appendChild(sel);
+          it.appendChild(ui.btn('Ismarla', () => { const k = sel.value, d = AK.Items.D[k]; buy(d.price, () => { ui.closeAll(); AK.Romance.treat(n, k); }); }, 'small'));
+        }
+        list.appendChild(it);
+      }
+      paintPorts(list);
+      void redraw;
+    },
+    treatPanel(b, pool) {
+      const ui = UI(), list = ui.el('div', 'col');
+      this.treatList(list, b, pool);
+      ui.panel({ title: 'Birine Ismarla', body: list, width: '32rem', foot: [ui.btn('Kapat', () => ui.closeTop())] });
+    },
+    // ---------------- ÇİÇEKÇİ ----------------
+    cicekci() {
+      const ui = UI(), z = AK.NPCs.get('zeynep');
+      const here = z && !AK.NPCs.walking(z) && (z.inside === 'cicekci' || z.key === 'garden_z');
+      if (!here) { this.closed('Zeynep\'in Çiçekçisi', 'Zeynep şu an burada değil. Dükkân hafta içi ve cumartesi 08:30–17:00 açık; sabahları ve pazarları onu bahçesinde bulabilirsin.'); return; }
+      const disc = AK.state.flags.zeynepDisc ? 0.8 : 1;
+      const body = ui.el('div', 'col');
+      body.innerHTML = header('zeynep', 'Her çiçeğin bir anlamı var! Papatya dostluk, lale neşe, sümbül sadakat... Kırmızı gül ise aşk.' + (disc < 1 ? ' (%20 dost indirimi)' : ''));
+      for (const k of FLOWERS) {
+        const d = AK.Items.D[k], price = Math.round(d.price * disc);
+        const it = ui.el('div', 'list-item');
+        it.innerHTML = `<img class="ic" src="${AK.Icons.url(AK.Icons.misc(k))}"><div class="grow"><b>${d.name}</b>${d.romance ? ' <span class="badge" style="color:#e8354a">AŞK</span>' : ''}<div class="small-t muted">${d.desc}</div></div><span class="gold">${price}</span>`;
+        const b = ui.btn('Al', () => { if (!AK.Inv.canAdd({ id: k, n: 1 })) return ui.toast('Çantan dolu!', 'bag'); buy(price, () => { AK.Inv.add({ id: k, n: 1 }); if (k === 'gul') ui.toast('Gül Buketi: kalbi tamamen dolu (10 kalp) bir sevgili adayına hediye ederek duygularını açabilirsin.', 'heart'); }); }, 'small');
+        b.disabled = AK.state.player.money < price;
+        it.appendChild(b); body.appendChild(it);
+      }
+      ui.panel({ title: 'Zeynep\'in Çiçekçisi', body, width: '30rem', foot: [talkBtn('zeynep'), ui.btn('Kapat', () => ui.closeTop())] });
+      paintPorts(body);
     },
     souvenir() {
       const ui = UI();
