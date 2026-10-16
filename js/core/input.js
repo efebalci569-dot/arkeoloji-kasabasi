@@ -37,9 +37,9 @@
       window.addEventListener('mouseup', e => { I.mouse.down[e.button] = false; });
       window.addEventListener('mousedown', () => { AK.Audio && AK.Audio.unlock(); });
       window.addEventListener('keydown', () => { AK.Audio && AK.Audio.unlock(); });
-      // dokunma: ekrana dokunmak sol tık gibidir; imleç ekranda kalmasın diye kare sonunda unutulur
+      // dokunma / kalem (Apple Pencil): ekrana dokunmak sol tık gibidir; imleç ekranda kalmasın diye kare sonunda unutulur
       cv.addEventListener('pointerdown', e => {
-        if (e.pointerType !== 'touch') return;
+        if (e.pointerType === 'mouse') return;
         e.preventDefault();
         I.mouse.cx = e.clientX; I.mouse.cy = e.clientY; I.mouse.onCanvas = true; I.mouse.touch = true;
         I.mouse.clicked[0] = true;

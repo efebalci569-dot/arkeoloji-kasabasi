@@ -32,7 +32,7 @@ body {
 #game { position: fixed; left: 0; top: 0; image-rendering: pixelated; image-rendering: crisp-edges; display: block; touch-action: none; }
 #ui { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
 .hidden { display: none !important; }
-img { image-rendering: pixelated; }
+img { image-rendering: pixelated; -webkit-user-drag: none; }
 h1, h2, h3, .title-font { font-family: 'Pixelify Sans', 'VT323', monospace; font-weight: 600; margin: 0; }
 
 /* ---------- 9-slice çerçeveler ---------- */
@@ -272,10 +272,10 @@ input.px-input { font-family: 'VT323', monospace; font-size: 1.3rem; background:
 /* ---------- dokunmatik kontroller (body.touch) ---------- */
 #touch-ui { display: none; }
 body.touch #touch-ui { display: block; }
-body.touch { --stick: clamp(104px, 28vmin, 150px); --abtn: clamp(58px, 16vmin, 80px); --bbtn: clamp(48px, 13vmin, 64px); --tb: 12px; --bx: calc(.5rem + var(--u) * 14px + 14px); }
+body.touch { --stick: clamp(104px, 28vmin, 150px); --abtn: clamp(58px, 16vmin, 80px); --bbtn: clamp(48px, 13vmin, 64px); --tb: 12px; --sab: env(safe-area-inset-bottom, 0px); --bx: calc(.5rem + var(--u) * 14px + 14px); }
 #touch-ui > div { position: absolute; pointer-events: auto; touch-action: none; }
 #t-stick {
-  left: 14px; bottom: var(--tb); width: var(--stick); height: var(--stick); border-radius: 50%;
+  left: 14px; bottom: calc(var(--tb) + var(--sab)); width: var(--stick); height: var(--stick); border-radius: 50%;
   background: rgba(43, 29, 42, .3); border: 3px solid rgba(246, 231, 198, .5); box-shadow: inset 0 0 0 4px rgba(43, 29, 42, .25);
 }
 #t-stick::before { content: ''; position: absolute; inset: -22px; border-radius: 50%; }
@@ -290,21 +290,21 @@ body.touch { --stick: clamp(104px, 28vmin, 150px); --abtn: clamp(58px, 16vmin, 8
 }
 .t-btn.on { transform: translateY(2px); filter: brightness(1.15); }
 #t-act {
-  right: var(--bx); bottom: var(--tb); width: var(--abtn); height: var(--abtn);
+  right: var(--bx); bottom: calc(var(--tb) + var(--sab)); width: var(--abtn); height: var(--abtn);
   font-family: 'VT323', monospace; font-size: calc(var(--abtn) * .6); text-shadow: 0 2px 0 #6b3416;
   background: #d9824a; box-shadow: inset 0 -5px 0 #a85a2e, inset 0 4px 0 #f0a86a, 0 3px 0 rgba(30, 18, 24, .45);
 }
 #t-act.ready { box-shadow: inset 0 -5px 0 #a85a2e, inset 0 4px 0 #f0a86a, 0 0 0 3px #f2c14e; animation: tpulse 1.1s ease-in-out infinite; }
 @keyframes tpulse { 50% { transform: scale(1.07); } }
 #t-use {
-  right: calc(var(--bx) + var(--abtn) * .6); bottom: calc(var(--tb) + var(--abtn) * .95); width: var(--bbtn); height: var(--bbtn);
+  right: calc(var(--bx) + var(--abtn) * .6); bottom: calc(var(--tb) + var(--sab) + var(--abtn) * .95); width: var(--bbtn); height: var(--bbtn);
   background: #4a86c8; box-shadow: inset 0 -4px 0 #2f5f98, inset 0 3px 0 #78aee0, 0 3px 0 rgba(30, 18, 24, .45);
 }
 #t-use img { width: calc(var(--bbtn) * .5); height: calc(var(--bbtn) * .5); image-rendering: pixelated; pointer-events: none; }
 #t-use span { font-size: calc(var(--bbtn) * .26); text-shadow: 0 1px 0 #1e3a60; pointer-events: none; }
-body.touch #hotbar { transform-origin: 50% 100%; }
-body.touch #energy { bottom: calc(var(--tb) + 4px); }
-body.touch #toasts { bottom: calc(var(--tb) + var(--stick) + 14px); max-width: min(26rem, calc(100vw - 1rem)); }
+body.touch #hotbar { transform-origin: 50% 100%; bottom: calc(.35rem + var(--sab)); }
+body.touch #energy { bottom: calc(var(--tb) + var(--sab) + 4px); }
+body.touch #toasts { bottom: calc(var(--tb) + var(--sab) + var(--stick) + 14px); max-width: min(26rem, calc(100vw - 1rem)); }
 body.touch #quest-tracker { max-width: min(19rem, calc(100vw - 13rem)); }
 body.touch #prompt { pointer-events: auto; }
 body.touch #hud-buttons { left: auto; bottom: auto; right: .4rem; top: var(--hbtop, 8rem); flex-direction: row; gap: 4px; }

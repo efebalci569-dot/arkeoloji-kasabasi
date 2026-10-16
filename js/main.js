@@ -12,6 +12,8 @@
       AK.Dialog.init();
       AK.Touch.init();
       window.addEventListener('resize', () => this.resize());
+      // iPad/iPhone döndürülünce yeni boyut bazen gecikmeli gelir
+      window.addEventListener('orientationchange', () => setTimeout(() => this.resize(), 300));
       this.resize();
       AK.state = AK.newState();
       this.buildWorld();

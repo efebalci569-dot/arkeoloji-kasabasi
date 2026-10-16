@@ -26,7 +26,7 @@
 
 ### Mobil (dokunmatik) kontroller
 
-Telefon ve tablette dokunmatik kontroller kendiliğinden açılır (Menü → *Dokunmatik* ile Otomatik / Açık / Kapalı yapılabilir). En rahatı telefonu yan çevirmektir.
+Telefon ve tablette (iPhone, Android, iPad) dokunmatik kontroller kendiliğinden açılır (Menü → *Dokunmatik* ile Otomatik / Açık / Kapalı yapılabilir). Telefonda en rahatı ekranı yan çevirmektir; iPad'de yatay da dikey de olur. iPad'e klavye kılıfı takılıyken klavyeyle oynarsan dokunmatik kontroller gizlenir, ekrana dokununca geri gelir. Apple Pencil ile dokunmak da çalışır.
 
 | Kontrol | İşlev |
 |---|---|

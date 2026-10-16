@@ -5,15 +5,25 @@
   const KEY = 'arkeoloji-kasabasi-dokunmatik';
   const MODES = { auto: 'Otomatik', on: 'Açık', off: 'Kapalı' };
   const HUD_ICONS = { inventory: 'bag', journal: 'quest', collection: 'museum', relations: 'heart', menu: 'menu' };
+  const KB_KEYS = /^(Key[WASDE]|Arrow|Space)/;
 
   AK.Touch = {
-    on: false, mode: 'auto', seen: false, MODES,
+    on: false, mode: 'auto', seen: false, kb: false, MODES,
     init() {
       try { this.mode = localStorage.getItem(KEY) || 'auto'; } catch (e) { this.mode = 'auto'; }
       if (!MODES[this.mode]) this.mode = 'auto';
       this.build();
-      // dokunmatik ekranlı dizüstünde kontroller ilk dokunuşta açılır
-      window.addEventListener('touchstart', () => { if (!this.seen) { this.seen = true; if (this.mode === 'auto') this.apply(); } }, { passive: true, capture: true });
+      // Otomatik: son kullanılan giriş kazanır. Dokunmatik ekranlı dizüstünde kontroller ilk dokunuşta açılır;
+      // iPad klavye kılıfı gibi gerçek bir klavyeyle oynanınca gizlenir, ekrana dokununca geri gelir.
+      window.addEventListener('touchstart', () => { if (!this.seen || this.kb) { this.seen = true; this.kb = false; if (this.mode === 'auto') this.apply(); } }, { passive: true, capture: true });
+      AK.Bus.on('key', code => { if (this.mode === 'auto' && this.on && KB_KEYS.test(code)) { this.kb = true; this.apply(); } });
+      // iPad'e fare / trackpad takılıp çıkarılınca yeniden karar ver
+      this.mq = window.matchMedia ? window.matchMedia('(pointer: coarse)') : null;
+      if (this.mq) { const f = () => this.apply(); if (this.mq.addEventListener) this.mq.addEventListener('change', f); else if (this.mq.addListener) this.mq.addListener(f); }
+      // iOS Safari viewport'taki user-scalable=no'yu yok sayar: iki parmakla yakınlaştırmayı burada engelle
+      document.addEventListener('gesturestart', e => e.preventDefault());
+      // iPad/iPhone'da ekran klavyesi kapanınca kaymış kalan sayfayı geri al
+      document.addEventListener('focusout', e => { if (e.target && /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) setTimeout(() => window.scrollTo(0, 0), 60); });
       // dokununca beliren ipucu kutusu ekranda takılı kalmasın
       document.addEventListener('touchstart', () => { clearTimeout(this._tipT); AK.UI.hideTip(); }, { passive: true, capture: true });
       document.addEventListener('touchend', () => { clearTimeout(this._tipT); this._tipT = setTimeout(() => AK.UI.hideTip(), 2600); }, { passive: true });
@@ -107,8 +117,8 @@
       this.apply();
     },
     apply() {
-      const coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-      this.on = this.mode === 'on' || (this.mode === 'auto' && (coarse || this.seen));
+      const coarse = !!(this.mq && this.mq.matches);
+      this.on = this.mode === 'on' || (this.mode === 'auto' && !this.kb && (coarse || this.seen));
       document.body.classList.toggle('touch', this.on);
       if (!this.on && this.releaseStick) this.releaseStick();
       document.querySelectorAll('#hud-buttons .px-btn').forEach(b => {
@@ -138,9 +148,10 @@
     started() {
       this.refreshUse();
       this.layout();
-      if (this.on && !this.hinted && window.innerHeight > window.innerWidth) {
+      // yalnızca dar (telefon) ekranlarda; iPad dikeyde zaten rahat sığar
+      if (this.on && !this.hinted && window.innerHeight > window.innerWidth && window.innerWidth < 600) {
         this.hinted = true;
-        setTimeout(() => AK.UI.toast('İpucu: Telefonunu yan çevirirsen kasabanın daha büyük bir kısmını görürsün.', 'star'), 1800);
+        setTimeout(() => AK.UI.toast('İpucu: Ekranı yan çevirirsen kasabanın daha büyük bir kısmını görürsün.', 'star'), 1800);
       }
     },
     // ---------------- tam ekran ----------------
@@ -151,7 +162,9 @@
       const d = document.documentElement;
       const p = (d.requestFullscreen || d.webkitRequestFullscreen).call(d);
       // telefonda tam ekrandayken yatay kilitlemeyi dene (desteklenmezse sessizce geç)
-      if (p && p.then) p.then(() => { if (this.on && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); }).catch(() => {});
+      if (p && p.then) p.then(() => {
+        try { if (this.on && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (e) { /* iOS/iPad desteklemez */ }
+      }).catch(() => {});
     },
   };
 })();
