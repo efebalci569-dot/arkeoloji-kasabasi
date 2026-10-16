@@ -6,7 +6,7 @@
 
 ## Nasıl oynanır?
 
-`index.html` dosyasına çift tıkla (Chrome / Edge / Firefox). İnternet varsa piksel yazı tipleri de yüklenir, yoksa yedek yazı tipi kullanılır.
+`index.html` dosyasına çift tıkla (Chrome / Edge / Firefox) ya da yukarıdaki bağlantıyı telefonunda aç. İnternet varsa piksel yazı tipleri de yüklenir, yoksa yedek yazı tipi kullanılır.
 
 > Tüm grafikler, müzik ve ses efektleri **kodla üretilir** — harici görsel ya da ses dosyası yoktur.
 
@@ -23,6 +23,20 @@
 | K | Keşif (koleksiyon) defteri |
 | R | İlişkiler (kalpler, sevgili, sevdikleri) |
 | Esc | Menü (ses, kaydet, kontroller) |
+
+### Mobil (dokunmatik) kontroller
+
+Telefon ve tablette dokunmatik kontroller kendiliğinden açılır (Menü → *Dokunmatik* ile Otomatik / Açık / Kapalı yapılabilir). En rahatı telefonu yan çevirmektir.
+
+| Kontrol | İşlev |
+|---|---|
+| Sol alttaki çubuk | Yürü (sonuna kadar itersen koşarsın) |
+| **E** düğmesi | Konuş, etkileşime geç, otur / kalk, konuşmayı ilerlet (yakında etkileşilecek bir şey varsa parlar) |
+| E'nin üstündeki düğme | Seçili aleti kullan, yemek ye / iç (seçili eşyanın simgesini gösterir) |
+| Karakterin yanına dokunmak | Dokunduğun yeri kaz / dokunduğun şeyle etkileşime geç |
+| Alttaki hızlı erişim çubuğu | Eşya seç |
+| Sağ üstteki simgeler | Çanta, Görevler, Koleksiyon, İlişkiler, Menü |
+| Menü → Tam ekran | Adres çubuğunu gizle (destekleyen tarayıcılarda) |
 
 ### Temel döngü
 
@@ -70,7 +84,7 @@ js/quests      görevler
 js/weather     hava
 js/seasons     zaman ve takvim
 js/save        kayıt
-js/ui          arayüz, menüler, hizmetler, başlık ekranı
+js/ui          arayüz, menüler, hizmetler, başlık ekranı, dokunmatik kontroller
 js/audio       prosedürel müzik ve sesler
 ```
 

@@ -52,6 +52,8 @@
     },
     // ---------------- güncelleme ----------------
     update(dt) {
+      // dokunmatikte yalnızca oyuncunun yakınına dokunmak tıklama sayılır
+      const click = In.mouse.clicked[0] && (!In.mouse.touch || this.tapNear());
       if (this.seated) {
         this.seated.t += dt;
         this.moving = false; this.target = null; this.signal = 0;
@@ -59,9 +61,9 @@
         if (In.mouse.wheel) { AK.Inv.select((AK.state.inv.sel + (In.mouse.wheel > 0 ? 1 : 9)) % 10); AK.UI.showToolName(); }
         // otururken yiyip içebilirsin
         const sel = AK.Inv.selected(), sd = sel && AK.Items.get(sel.id);
-        if (sd && sd.type === 'food' && (In.hit('use') || In.mouse.clicked[0])) { this.eat(sel); return; }
+        if (sd && sd.type === 'food' && (In.hit('use') || click)) { this.eat(sel); return; }
         const moveKey = In.down('up') || In.down('down') || In.down('left') || In.down('right');
-        if (this.seated.t > 0.35 && (moveKey || In.hit('interact') || In.hit('use') || In.mouse.clicked[0] || In.mouse.clicked[2])) { this.standUp(); In.eat('interact'); }
+        if (this.seated.t > 0.35 && (moveKey || In.hit('interact') || In.hit('use') || click || In.mouse.clicked[2])) { this.standUp(); In.eat('interact'); }
         return;
       }
       if (this.holdT > 0) { this.holdT -= dt; if (this.holdT <= 0) this.hold = null; this.moving = false; return; }
@@ -105,7 +107,11 @@
       this.updateDetector(dt);
       if (In.hit('interact') || In.mouse.clicked[2]) this.interact(In.mouse.clicked[2]);
       else if (In.hit('use')) this.use(false);
-      else if (In.mouse.clicked[0]) this.use(true);
+      else if (click) this.use(true);
+    },
+    tapNear() {
+      const mw = this.mouseWorld();
+      return !!mw && U.dist(mw[0], mw[1], this.x, this.y - 8) < 44;
     },
     computeTarget() {
       const m = AK.World.cur;

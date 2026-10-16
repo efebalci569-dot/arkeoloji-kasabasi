@@ -340,6 +340,15 @@
         r.appendChild(inp); return r;
       };
       body.append(vol('Müzik', 'music'), vol('Efektler', 'sfx'));
+      // dokunmatik kontroller (cihaza kaydedilir) ve tam ekran
+      const tr = ui.el('div', 'row');
+      tr.style.flexWrap = 'wrap';
+      tr.innerHTML = '<span style="width:5rem">Dokunmatik</span>';
+      const Tc = AK.Touch, tl = () => Tc.MODES[Tc.mode] + (Tc.mode === 'auto' ? (Tc.on ? ' (açık)' : ' (kapalı)') : '');
+      const tb = ui.btn(tl(), () => { const ks = Object.keys(Tc.MODES); Tc.setMode(ks[(ks.indexOf(Tc.mode) + 1) % ks.length]); tb.textContent = tl(); }, 'small');
+      tr.appendChild(tb);
+      if (Tc.canFull()) tr.appendChild(ui.btn('Tam ekran', () => Tc.toggleFull(), 'small'));
+      body.appendChild(tr);
       body.appendChild(ui.el('div', 'small-t muted', `Oyun her uyuduğunda ve bölge değiştirdiğinde otomatik kaydedilir.`));
       ui.panel({
         title: 'Menü', body, width: '22rem',
@@ -356,6 +365,8 @@
         <div><b>1–0</b> veya <b>fare tekerleği</b> — Hızlı erişim çubuğundan seç</div>
         <div><b>I / Tab</b> — Çanta · <b>J</b> — Görevler · <b>K</b> — Koleksiyon · <b>R</b> — İlişkiler · <b>Esc</b> — Menü</div>
         <div><b>Otururken</b> Boşluk ile yiyip içebilirsin; yanında oturan biri varsa birlikte yemiş olursunuz.</div>
+        <div class="sep"></div>
+        <div><b>Dokunmatik ekran:</b> Sol alttaki çubukla yürü (sonuna kadar itersen koşarsın). <b>E</b> düğmesi konuşur ve etkileşir; üstündeki düğme seçili aleti kullanır ya da yemeği yer. Karakterinin hemen yanındaki bir şeye dokunmak da onu kullanır. Eşya seçmek için alttaki çubuğa, çanta ve menüler için sağ üstteki simgelere dokun. (Menü → Dokunmatik ile açıp kapatabilirsin.)</div>
         <div class="sep"></div>
         <div><b>Oyun döngüsü:</b> Keşfet → Kaz → Eser bul → Temizle → Sat ya da Bağışla → Para kazan → Ekipman/Dükkân geliştir → Yeni bölge aç</div></div>`,
         foot: [ui.btn('Tamam', () => ui.closeTop())],

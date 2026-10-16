@@ -10,6 +10,7 @@
       AK.Skin.init();
       AK.UI.initHUD();
       AK.Dialog.init();
+      AK.Touch.init();
       window.addEventListener('resize', () => this.resize());
       this.resize();
       AK.state = AK.newState();
@@ -47,6 +48,7 @@
       this.ctx.imageSmoothingEnabled = false;
       AK.World.vw = vw; AK.World.vh = vh;
       AK.UI.setScale(Math.max(2, s - 1));
+      if (AK.Touch) AK.Touch.layout();
     },
     start(isNew) {
       this.title = false;
@@ -65,6 +67,7 @@
       if (!AK.Player.free(p.x, p.y)) { AK.World.enter('house', 3, 3, 'down'); }
       AK.World.fade = 1; AK.World.fadeDir = -1; AK.World.busy = true;
       document.getElementById('hud').classList.remove('hidden');
+      AK.Touch.started();
       AK.UI.last = {};
       AK.UI.refreshTracker();
       this.ambience();
@@ -72,7 +75,7 @@
         AK.Quests.start('s_hosgeldin', true);
         setTimeout(() => AK.Dialog.open({
           name: 'Amcandan Mektup', icon: AK.Icons.ui('mail'),
-          lines: ['"Sevgili {ad},', 'Dizlerim artık kazıya dayanmıyor; emekliye ayrılıp dünyayı gezmeye karar verdim. Hayatım boyunca bu kasabanın altındaki sırrı aradım. Şimdi sıra sende.', 'Küçük evim, harap dükkânım ve paslı aletlerim artık senin. Müzedeki eski dostum Nermin\'e selamımı söyle. Sana yol gösterecektir.', 'Toprağı dinle. — Amcan Doğan"', '(Hareket: WASD · Etkileşim: E · Alet kullan: Boşluk veya sol tık · Çanta: I · Görevler: J)'],
+          lines: ['"Sevgili {ad},', 'Dizlerim artık kazıya dayanmıyor; emekliye ayrılıp dünyayı gezmeye karar verdim. Hayatım boyunca bu kasabanın altındaki sırrı aradım. Şimdi sıra sende.', 'Küçük evim, harap dükkânım ve paslı aletlerim artık senin. Müzedeki eski dostum Nermin\'e selamımı söyle. Sana yol gösterecektir.', 'Toprağı dinle. — Amcan Doğan"', AK.Touch.on ? '(Hareket: sol alttaki çubuk · Etkileşim: E düğmesi · Alet kullan: E\'nin üstündeki düğme · Çanta ve menüler: sağ üstteki simgeler)' : '(Hareket: WASD · Etkileşim: E · Alet kullan: Boşluk veya sol tık · Çanta: I · Görevler: J)'],
           onEnd: () => AK.UI.toast('İlk görev: Müzeye git ve Nermin Hanım ile konuş. Müze, meydanın batısındaki sütunlu bina.', 'quest'),
         }), 600);
         AK.Save.save(true);
@@ -126,7 +129,7 @@
     },
     updatePrompt() {
       const s = this.scale, cam = AK.World.cam;
-      if (AK.Player.seated) { const sel = AK.Inv.selected(), sd = sel && AK.Items.get(sel.id); AK.UI.prompt('<b>E</b> Kalk' + (sd && sd.type === 'food' ? ` · <b>Boşluk</b> ${sd.drink ? 'İç' : 'Ye'}` : ''), (AK.Player.x - cam.x) * s, (AK.Player.y - 30 - cam.y) * s); return; }
+      if (AK.Player.seated) { const sel = AK.Inv.selected(), sd = sel && AK.Items.get(sel.id); AK.UI.prompt('<b>E</b> Kalk' + (sd && sd.type === 'food' && !AK.Touch.on ? ` · <b>Boşluk</b> ${sd.drink ? 'İç' : 'Ye'}` : ''), (AK.Player.x - cam.x) * s, (AK.Player.y - 30 - cam.y) * s); return; }
       const f = AK.Player.findInteract(false);
       if (!f) { AK.UI.prompt(null); return; }
       let x, y, text;

@@ -70,7 +70,7 @@
     buildUI() {
       const s = this.s, UI = AK.UI;
       this.open = true;
-      const disp = 64 * Math.max(4, Math.min(6, Math.floor(window.innerHeight / 150)));
+      const disp = 64 * Math.max(window.innerHeight < 480 ? 3 : 4, Math.min(6, Math.floor(window.innerHeight / 150)));
       const wrap = UI.el('div', 'clean-wrap');
       const cv = document.createElement('canvas'); cv.width = N; cv.height = N; cv.style.width = cv.style.height = disp + 'px';
       this.cv = cv; this.g = cv.getContext('2d'); this.g.imageSmoothingEnabled = false;

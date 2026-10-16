@@ -163,6 +163,7 @@
     },
     prompt(text, sx, sy) {
       const el = $('prompt');
+      if (AK.Touch) AK.Touch.hint(!!text);
       if (!text) { el.classList.add('hidden'); return; }
       el.innerHTML = text;
       el.classList.remove('hidden');
@@ -214,6 +215,7 @@
         }
         L.inv = AK.Inv.ver; L.sel = st.inv.sel;
         this.refreshTracker();
+        if (AK.Touch) AK.Touch.refreshUse();
       }
     },
     refreshTracker() {
